@@ -49,7 +49,6 @@ scala -------> .class ----------> run on JVM
 > [!important]  
 > Java 是编译型语言还是解释型语言？Java 先编译在通过 JVM 解释执行，可以称为半编译半解释，一般不明确到底是什么类型  
 
-测试
 ## 1.3 Test
 
 1. 新建文件 `HelloScala.scala`
