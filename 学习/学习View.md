@@ -20,8 +20,10 @@ columns:
     csvCandidate: true
     position: 0
     isHidden: false
-    sortIndex: -1
+    sortIndex: 1
     width: 282
+    isSorted: true
+    isSortedDesc: true
     config:
       enable_media_view: true
       link_alias_enabled: true
@@ -67,7 +69,10 @@ columns:
     csvCandidate: true
     position: 0
     isHidden: false
-    sortIndex: -1
+    sortIndex: 2
+    width: 229
+    isSorted: true
+    isSortedDesc: true
     config:
       enable_media_view: true
       link_alias_enabled: true
@@ -99,6 +104,74 @@ columns:
       task_hide_completed: true
       footer_type: none
       persist_changes: false
+  __inlinks__:
+    key: __inlinks__
+    id: __inlinks__
+    input: inlinks
+    label: Inlinks
+    accessorKey: __inlinks__
+    isMetadata: true
+    isDragDisabled: false
+    skipPersist: false
+    csvCandidate: false
+    width: 252
+    position: 0
+    isHidden: false
+    sortIndex: -1
+    config:
+      enable_media_view: true
+      link_alias_enabled: true
+      media_width: 100
+      media_height: 100
+      isInline: false
+      task_hide_completed: true
+      footer_type: none
+      persist_changes: false
+  __outlinks__:
+    key: __outlinks__
+    id: __outlinks__
+    input: outlinks
+    label: Outlinks
+    accessorKey: __outlinks__
+    isMetadata: true
+    isDragDisabled: false
+    skipPersist: false
+    csvCandidate: false
+    width: 194
+    position: 0
+    isHidden: false
+    sortIndex: -1
+    config:
+      enable_media_view: true
+      link_alias_enabled: true
+      media_width: 100
+      media_height: 100
+      isInline: false
+      task_hide_completed: true
+      footer_type: none
+      persist_changes: false
+  __tags__:
+    key: __tags__
+    id: __tags__
+    input: metadata_tags
+    label: File Tags
+    accessorKey: __tags__
+    isMetadata: true
+    isDragDisabled: false
+    skipPersist: false
+    csvCandidate: false
+    position: 0
+    isHidden: false
+    sortIndex: -1
+    config:
+      enable_media_view: true
+      link_alias_enabled: true
+      media_width: 100
+      media_height: 100
+      isInline: false
+      task_hide_completed: true
+      footer_type: none
+      persist_changes: false
 config:
   remove_field_when_delete_column: false
   cell_size: wide
@@ -110,9 +183,9 @@ config:
   show_metadata_created: true
   show_metadata_modified: true
   show_metadata_tasks: true
-  show_metadata_inlinks: false
-  show_metadata_outlinks: false
-  show_metadata_tags: false
+  show_metadata_inlinks: true
+  show_metadata_outlinks: true
+  show_metadata_tags: true
   source_data: current_folder
   source_form_result: 
   source_destination_path: /
