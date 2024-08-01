@@ -52,7 +52,7 @@ scala -------> .class ----------> run on JVM
 ## 1.3 Test
 
 1. 新建文件 `HelloScala.scala`
-    
+
     ```Scala
     object HelloScala { // HelloScala is a object, not a class, will create a 
         def main(args : Array[String]) : Unit = {
