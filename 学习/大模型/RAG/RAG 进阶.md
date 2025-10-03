@@ -629,6 +629,8 @@ while True:
 当我们完成了一个RAG系统的开发工作以后，我们还需要对RAG系统的性能进行评估，那如何来对RAG系统的性能进行评估呢？我们可以仔细分析一下RAG系统的产出成果，比如检索器组件它产出的是检索出来的相关文档即context, 而生成器组件它产出的是最终的答案即answer,除此之外还有我们最初的用户问题即question。因此RAG系统的评估应该是将question、context、answer结合在一起进行评估。
 
 ## 5.1. RAG 三元组
+![image.png](https://learning-1316972768.cos.ap-nanjing.myqcloud.com/%E5%AD%A6%E4%B9%A0/largeModel/20251003172432309.png)
+
 标准的 RAG 流程就是用户提出 Query 问题，RAG 应用去召回 Context，然后 LLM 将 Context 组装，生成满足 Query 的 Response 回答。那么在这里出现的三元组:—— **Query、Context 和 Response 就是 RAG 整个过程中最重要的三元组**，它们之间两两相互牵制。我们可以通过检测三元组之间两两元素的相关度，来评估这个 RAG 应用的效果：
 - **Context Relevance:** 衡量召回的 Context 能够支持 Query 的程度。如果该得分低，反应出了**召回**了太多与Query 问题无关的内容，这些错误的召回知识会对 LLM 的最终回答造成一定影响。
 - **Groundedness:** 衡量 LLM 的 Response 遵从召回的 Context 的程度。如果该得分低，反应出了 LLM 的回答不遵从召回的知识，那么回答出现**幻觉**的可能就越大。
@@ -691,29 +693,30 @@ Ragas提供了五种评估指标包括：
 文档切割时传统的做法是使用像CharacterTextSplitter, RecursiveCharacterTextSplitter这样的文档分割器将文档按指定的块大小(chunk_size)来均匀的切割文档，然后将每个文档块做向量化处理(Embedding)后将其保存到向量数据库中，而当我们在做文档检索时，会将用户的问题转换成的向量与向量数据库中的文档块的向量做相似度计算，并从中获取k个与用户问题向量相似度最高的文档块(也就是和用户问题相关的文档块)，然后我们会把用户的问题以及相关的文档块一起发送给LLM, 最后LLM会给出一个对用户友好的回复。这就是一般的传统文档检索的方法。
 
 传统检索方法其实存在一定的局限性，这是因为文档块的大小会影响和用户问题的匹配度，也就是说当我们切割的文档块越大时，它与用户问题的匹配度就会越低，当文档块越小时，它与用户问题的匹配度会越高，这是因为较大的文档块可能会包含较多的内容，当它被转换成一个固定维度的向量时，该向量可能不能够准确反应出该文档块中的所有内容，因而对用户问题的匹配度就会降低，而小的文档块包含的内容较少，当它被转换成一个固定维度的向量时，该向量基本能够准确反应出该文档块中的内容,因此它与用户问题的匹配度会教高，但是较小的文档块可能因为所包含的信息量较少，因而它可能不是一个全面且正确的答案。为了解决这些问题今天来介绍Langchain中的父文档检索器，它能够有效的解决文档块大小与用户问题匹配的问题。
+![image.png](https://learning-1316972768.cos.ap-nanjing.myqcloud.com/%E5%AD%A6%E4%B9%A0/largeModel/20251003172514397.png)
 
-由于我们在利用大模型进行文档检索的时候，常常会有相互矛盾的需求，比如：
-
+由于我们在利用大模型进行文档检索的时候，常常会有**相互矛盾的需求**，比如：
 - 希望得到较小的文档块，以便它们Embedding以后能够最准确地反映出文档的含义，如果文档块太大，Embedding就失去了意义。
-    
 - 希望得到较大的文档块以保留教多的内容，然后将它们发送给LLM以便得到全面且正确的答案。
     
-
 面对这样矛盾的需求，Langchain的父文档检索器为我们提供了两种有效的解决方案：
-
-- 检索完整文档
-    
-- 检索较大的文档块
+- **检索完整文档**
+- **检索较大的文档块**
     
 
 ### 5.3.2. 检索完整文档
 
-所谓检索完整文档是指将原始文档均匀的切割成若干个较小的文档块，然后将它们与用户的问题进行匹配，最后将匹配到的文档块所在原始文档和用户问题一起发送给llm后由llm生成最终答案，如下图所示：
+所谓检索完整文档是指：
+- 将原始文档均匀的切割成若干个较小的文档块
+- 然后将它们与用户的问题进行匹配
+- 最后将匹配到的文档块所在原始文档和用户问题一起发送给llm后由llm生成最终答案，如下图所示：
+![image.png](https://learning-1316972768.cos.ap-nanjing.myqcloud.com/%E5%AD%A6%E4%B9%A0/largeModel/20251003172736192.png)
 
 ### 5.3.3. 检索较大的文档块
+![image.png](https://learning-1316972768.cos.ap-nanjing.myqcloud.com/%E5%AD%A6%E4%B9%A0/largeModel/20251003172842266.png)
 
-当原始文档比较大时，我们需要将原始文档按照两个层级进行切割，即切割成主文档块和子文档块，而用户的问题会与所有的子文档块进行匹配(相似度比较) ，当匹配到特定的子文档块后，将该子文档块所属的主文档块的全部内容以及用户问题发送给llm，最后由llm来生成答案。
-
+当原始文档比较大时，我们需要将**原始文档**按照**两个层级进行切割**，即切割成**主文档块和子文档块**，而用户的问题会与所有的**子文档块进行匹配**(相似度比较) ，当匹配到特定的子文档块后，将该子文档块所属的**主文档块的全部内容**以及用户问题发送给llm，最后由llm来生成答案。
+```python
 # !pip install pypdf  
 # !pip install ragas  
 # !pip install langchain  
@@ -723,17 +726,9 @@ from langchain.document_loaders import PyPDFLoader
   
 docs = PyPDFLoader("./浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf").load()  
 docs
+```
 
-[Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 0, 'page_label': '1'}, page_content='百度文库 - 好好学习，天天向上 \n-1 \n上海浦东发展银行西安分行 \n个金客户经理管理考核暂行办法 \n \n \n第一章  总   则 \n第一条  为保证我分行个金客户经理制的顺利实施，有效调动个\n金客户经理的积极性， 促进个金业务快速、 稳定地发展， 根据总行 《上\n海浦东发展银行个人金融营销体系建设方案（试行）》要求，特制定\n《上海浦东发展银行西安分行个金客户经理管理考核暂行办法（试\n行）》（以下简称本办法）。 \n第二条  个金客户经理系指各支行（营业部）从事个人金融产品\n营销与市场开拓，为我行个人客户提供综合银行服务的我行市场人\n员。 \n第三条  考核内容分为二大类， 即个人业绩考核、 工作质量考核。\n个人业绩包括个人资产业务、负债业务、卡业务。工作质量指个人业\n务的资产质量。 \n第四条  为规范激励规则，客户经理的技术职务和薪资实行每年\n考核浮动。客户经理的奖金实行每季度考核浮动，即客户经理按其考\n核内容得分与行员等级结合，享受对应的行员等级待遇。'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 1, 'page_label': '2'}, page_content='百度文库 - 好好学习，天天向上 \n-2 \n第二章  职位设置与职责 \n第五条  个金客户经理职位设置为：客户经理助理、客户经理、\n高级客户经理、资深客户经理。 \n第六条  个金客户经理的基本职责： \n（一）  客户开发。研究客户信息、联系与选择客户、与客户建\n立相互依存、相互支持的业务往来关系，扩大业务资源，创造良好业\n绩； \n（二）业务创新与产品营销。把握市场竞争变化方向，开展市场\n与客户需求的调研，对业务产品及服务进行创新；设计客户需求的产\n品组合、制订和实施市场营销方案； \n（三）客户服务。负责我行各类表内外授信业务及中间业务的受\n理和运作，进行综合性、整体性的客户服务； \n（四）防范风险，提高收益。提升风险防范意识及能力，提高经\n营产品质量； \n（五）培养人材。在提高自身综合素质的同时，发扬团队精神，\n培养后备业务骨干。'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 2, 'page_label': '3'}, page_content='百度文库 - 好好学习，天天向上 \n-3 \n第三章  基础素质要求 \n第七条  个金客户经理准入条件： \n（一）工作经历：须具备大专以上学历，至少二年以上银行工作\n经验。 \n（二）工作能力：熟悉我行的各项业务，了解市场情况，熟悉各\n类客户的金融需求，熟悉个人理财工具，有一定的业务管理和客户管\n理能力。 \n（三）工作业绩：个金客户经理均应达到相应等级的准入标准。\n该标准可根据全行整体情况由考核部门进行调整。 \n（四）专业培训：个金客户经理应参加有关部门组织的专业培训\n并通过业务考试。 \n（五）符合分行人事管理和专业管理的要求。 \n第四章  个人业绩考核标准 \n第八条  个金客户经理个人业绩以储蓄季日均、季有效净增发卡\n量、季净增个贷余额三项业务为主要考核指标，实行季度考核。具体\n标准如下： \n \n    \n类别 行员级别 考核分值 准入标准 \n储蓄业务 个贷业务 卡业务 \n客户经理助理 5 90 300 万  500 张 \n4 95'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 3, 'page_label': '4'}, page_content='百度文库 - 好好学习，天天向上 \n-4 \n3 100  \n2 105  \n1 110  \n客户经理 5 115 300 万  500 张 \n4 120  \n3 125  \n2 130  \n1 135  \n高级客户经理 5 140 500 万 800 万  \n4 145  \n3 150  \n2 155  \n1 160  \n资深客户经理 5 165 500 万 800 万  \n4 170  \n3 175  \n2 180  \n1 185  \n说明：1.储蓄业务（季日均余额）为各类个金客户经理考核进入的最低标准。  \n2.卡业务（季新增发有效卡量）为见习、D 类、初级客户经理进入的最低标准。 \n3.有效卡的概念：每张卡月均余额为 100 元以上。 \n4.个贷业务（季新增发放个贷）为中级以上客户经理考核进入的最低标准。 \n5.超出最低考核标准可相互折算，折算标准：50 万储蓄=50 万个贷=50 张有效卡=5 分（折算以 5 分为单位）'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 4, 'page_label': '5'}, page_content='百度文库 - 好好学习，天天向上 \n-5 \n第五章  工作质量考核标准 \n第九条  工作质量考核实行扣分制。工作质量指个金客户经理在\n从事所有个人业务时出现投诉、差错及风险。该项考核最多扣50 分，\n如发生重大差错事故，按分行有关制度处理。 \n（一）服务质量考核：  \n1、工作责任心不强，缺乏配合协作精神；扣5 分 \n2、客户服务效率低，态度生硬或不及时为客户提供维护服务，\n有客户投诉的,每投诉一次扣2 分 \n3、不服从支行工作安排，不认真参加分（支）行宣传活动的，\n每次扣2 分； \n4、未能及时参加分行（支行）组织的各种业务培训、考试和专\n题活动的每次扣2 分； \n5、未按规定要求进行贷前调查、贷后检查工作的，每笔扣5 分； \n6、未建立信贷台帐资料及档案的每笔扣5 分； \n7、在工作中有不廉洁自律情况的每发现一次扣50 分。 \n（二）个人资产质量考核： \n当季考核收息率97%以上为合格，每降1 个百分点扣2 分；不\n良资产零为合格，每超一个个百分点扣1 分。 \nA.发生跨月逾期，单笔不超过10 万元，当季收回者，扣1 分。 \nB.发生跨月逾期，2 笔以上累计金额不超过20 万元，当季收回\n者，扣2 分；累计超过20 万元以上的，扣4 分。'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 5, 'page_label': '6'}, page_content='百度文库 - 好好学习，天天向上 \n-6 \nC.发生逾期超过3 个月，无论金额大小和笔数，扣10 分。 \n \n第六章  聘任考核程序 \n第十条  凡达到本办法第三章规定的该技术职务所要求的行内职\n工，都可向分行人力资源部申报个金客户经理评聘。 \n第十一条  每年一月份为客户经理评聘的申报时间，由分行人力\n资源部、个人业务部每年二月份组织统一的资格考试。考试合格者由\n分行颁发个金客户经理资格证书，其有效期为一年。 \n第十二条  客户经理聘任实行开放式、浮动制，即：本人申报 —\n— 所在部门推荐 —— 分行考核 —— 行长聘任 —— 每年考评\n调整浮动。  \n第十三条  特别聘任： \n（一）经分行同意录用从其他单位调入的个金客户经理，由用人\n单位按D 类人员进行考核， 薪资待遇按其业绩享受行内正式行员工同\n等待遇。待正式转正后按第十一条规定申报技术职务。 \n（二）对为我行业务创新、工作业绩等方面做出重大贡献的市场\n人员经支行推荐、分行行长批准可越级聘任。 \n第十四条  对于创利业绩较高，而暂未入围技术职务系列，或所\n评聘技术职务较低的市场人员，各级领导要加大培养力度，使其尽快'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 6, 'page_label': '7'}, page_content='百度文库 - 好好学习，天天向上 \n-7 \n入围，并由所在行制定临时奖励办法。 \n \n第七章  考核待遇 \n第十五条  个人金融业务客户经理的收入基本由三部分组成： 客\n户经理等级基本收入、业绩奖励收入和日常工作绩效收入。 \n客户经理等级基本收入是指客户经理的每月基本收入， 基本分为\n助理客户经理、客户经理、高级客户经理和资深客户经理四大层面，\n在每一层面分为若干等级。 \n客户经理的等级标准由客户经理在上年的业绩为核定标准， 如果\n客户经理在我行第一次进行客户经理评级， 以客户经理自我评价为主\n要依据，结合客户经理以往工作经验，由个人金融部、人事部门共同\n最终决定客户经理的等级。 \n助理客户经理待遇按照人事部门对主办科员以下人员的待遇标\n准；客户经理待遇按照人事部门对主办科员的待遇标准；高级客户经\n理待遇按照人事部门对付科级的待遇标准； 资深客户经理待遇按照人\n事部门对正科级的待遇标准。 \n业绩奖励收入是指客户经理每个业绩考核期间的实际业绩所给\n与兑现的奖金部分。 \n日常工作绩效收入是按照个金客户经理所从事的事务性工作进\n行定量化考核，经过工作的完成情况进行奖金分配。该项奖金主要由\n个人金融部总经理和各支行的行长其从事个人金融业务的人员进行\n分配，主要侧重分配于从事个金业务的基础工作和创新工作。'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 7, 'page_label': '8'}, page_content='百度文库 - 好好学习，天天向上 \n-8 \n第十五条  各项考核分值总计达到某一档行员级别考核分值标\n准，个金客户经理即可在下一季度享受该级行员的薪资标准。下一季\n度考核时，按照已享受行员级别考核折算比值进行考核，以次类推。 \n第十六条  对已聘为各级客户经理的人员，当工作业绩考核达不\n到相应技术职务要求下限时，下一年技术职务相应下调。 \n第十七条  为保护个人业务客户经理创业的积极性，暂定其收入\n构成中基础薪点不低于40%。 \n \n第八章  管理与奖惩 \n第十八条  个金客户经理管理机构为分行客户经理管理委员会。\n管理委员会组成人员：行长或主管业务副行长，个人业务部、人力资\n源部、风险管理部负责人。 \n第十九条  客户经理申报的各种信息必须真实。分行个人业务部\n需对其工作业绩数据进行核实，并对其真实性负责；分行人事部门需\n对其学历、工作阅历等基本信息进行核实，并对其真实性负责。 \n第二十条  对因工作不负责任使资产质量产生严重风险或造成损\n失的给予降级直至开除处分，构成渎职罪的提请司法部门追究刑事责\n任。'),  
- Document(metadata={'producer': 'Microsoft® Word 2019', 'creator': 'Microsoft® Word 2019', 'creationdate': '2023-05-06T22:46:33+08:00', 'author': 'Chen Yang', 'moddate': '2023-05-06T22:46:33+08:00', 'source': './浦发上海浦东发展银行西安分行个金客户经理考核办法.pdf', 'total_pages': 9, 'page': 8, 'page_label': '9'}, page_content='百度文库 - 好好学习，天天向上 \n-9 \n第九章  附    则 \n第二十一条  本办法自发布之日起执行。 \n第二十二条  本办法由上海浦东发展银行西安分行行负责解释和\n修改。')]
-
+```python
 import os  
 from langchain_community.embeddings import DashScopeEmbeddings  
 from langchain_community.llms import Tongyi  
@@ -779,14 +774,12 @@ retriever = ParentDocumentRetriever(
 # 添加文档集  
 retriever.add_documents(docs)
 
-C:\Users\Administrator\AppData\Local\Temp\ipykernel_52976\3564774892.py:29: LangChainDeprecationWarning: The class `Chroma` was deprecated in LangChain 0.2.9 and will be removed in 1.0. An updated version of the class exists in the :class:`~langchain-chroma package and should be used instead. To use it run `pip install -U :class:`~langchain-chroma` and import as `from :class:`~langchain_chroma import Chroma``.  
-  vectorstore = Chroma(
-
 # 切割出来主文档的数量  
 len(list(store.yield_keys()))
 
-11
+```
 
+```python
 from langchain.prompts import ChatPromptTemplate  
 from langchain.schema.runnable import RunnableMap  
 from langchain.schema.output_parser import StrOutputParser  
@@ -813,14 +806,11 @@ chain = RunnableMap({
 query = "客户经理被投诉了，投诉一次扣多少分？"  
 response = chain.invoke({"question": query})  
 print(response)
+```
 
-C:\Users\Administrator\AppData\Local\Temp\ipykernel_52976\673103712.py:20: LangChainDeprecationWarning: The method `BaseRetriever.get_relevant_documents` was deprecated in langchain-core 0.1.46 and will be removed in 1.0. Use :meth:`~invoke` instead.  
-  "context": lambda x: retriever.get_relevant_documents(x["question"]),
-
-每投诉一次扣2分。如果发生重大差错事故，将按分行有关制度处理。
 
 #### 5.3.4. 准备评估的QA数据集
-
+```python
 from datasets import Dataset  
   
 questions = [  
@@ -858,88 +848,44 @@ data = {
 }  
    
 # Convert dict to dataset  
-dataset = Dataset.from_dict(data)  
-dataset
-
-d:\envs\chapter-3\lib\site-packages\tqdm\auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html  
-  from .autonotebook import tqdm as notebook_tqdm
-
-Dataset({  
-    features: ['user_input', 'response', 'retrieved_contexts', 'reference'],  
-    num_rows: 6  
-})
-
-# 评测结果  
-from ragas import evaluate  
-from ragas.metrics import (  
-    faithfulness,  
-    answer_relevancy,  
-    context_recall,  
-    context_precision,  
-)  
-   
-result = evaluate(  
-    dataset = dataset,   
-    metrics=[  
-        context_precision,  
-        context_recall,  
-        faithfulness,  
-        answer_relevancy,  
-    ],  
-    embeddings=embeddings  
-)  
-   
-df = result.to_pandas()  
-df
-
-Evaluating: 100%|██████████| 24/24 [00:29<00:00,  1.24s/it]
-
-​
-
-​
-
-.dataframe tbody tr th {  
-    vertical-align: top;  
-}  
+dataset = Dataset.from_dict(data)
+```
   
-.dataframe thead th {  
-    text-align: right;  
-}
+- 评测结果
+	```python
+	# 评测结果  
+	from ragas import evaluate  
+	from ragas.metrics import (  
+	    faithfulness,  
+	    answer_relevancy,  
+	    context_recall,  
+	    context_precision,  
+	)  
+	   
+	result = evaluate(  
+	    dataset = dataset,   
+	    metrics=[  
+	        context_precision,  
+	        context_recall,  
+	        faithfulness,  
+	        answer_relevancy,  
+	    ],  
+	    embeddings=embeddings  
+	)  
+	   
+	df = result.to_pandas()  
+	df
+	```
 
-</style>
-
-​
-
-||user_input|retrieved_contexts|response|reference|context_precision|context_recall|faithfulness|answer_relevancy|
-|---|---|---|---|---|---|---|---|---|
-|0|客户经理被投诉了，投诉一次扣多少分？|[百度文库 - 好好学习，天天向上 \n-5 \n第五章 工作质量考核标准 \n第九条 ...|每投诉一次扣2分。如果发生重大差错事故，则按分行有关制度处理。|每投诉一次扣2分|1.0|1.0|1.000000|0.674051|
-|1|客户经理每年评聘申报时间是怎样的？|[百度文库 - 好好学习，天天向上 \n-6 \nC.发生逾期超过3 个月，无论金额大小和笔...|客户经理每年的评聘申报时间为一月份，二月份进行统一资格考试。考试合格者将获得有效期为一年的个...|每年一月份为客户经理评聘的申报时间|1.0|1.0|1.000000|0.948548|
-|2|客户经理在工作中有不廉洁自律情况的，发现一次扣多少分？|[百度文库 - 好好学习，天天向上 \n-5 \n第五章 工作质量考核标准 \n第九条 ...|每发现一次扣50分。|在工作中有不廉洁自律情况的每发现一次扣50分|1.0|1.0|1.000000|0.374590|
-|3|客户经理不服从支行工作安排，每次扣多少分？|[百度文库 - 好好学习，天天向上 \n-5 \n第五章 工作质量考核标准 \n第九条 ...|每次扣2分。不服从支行工作安排，不认真参加分（支）行宣传活动的，每次扣2分。|不服从支行工作安排，每次扣2分|1.0|1.0|0.666667|0.712643|
-|4|客户经理需要什么学历和工作经验才能入职？|[百度文库 - 好好学习，天天向上 \n-3 \n第三章 基础素质要求 \n第七条 个金...|客户经理需要大专以上学历和至少两年以上银行工作经验。此外，还需具备一定的业务能力和管理能力并...|须具备大专以上学历，至少二年以上银行工作经验|1.0|1.0|1.000000|0.923629|
-|5|个金客户经理职位设置有哪些？|[百度文库 - 好好学习，天天向上 \n-2 \n第二章 职位设置与职责 \n第五条 个...|个金客户经理职位设置包括客户经理助理、客户经理、高级客户经理和资深客户经理。这些职位的基本职...|个金客户经理职位设置为：客户经理助理、客户经理、高级客户经理、资深客户经理|1.0|1.0|1.000000|0.730185|
-
-​
-
-</div>
 
 若出现如下异常，是由于pydantic版本问题造成：
-
 - `AttributeError: module 'pydantic._internal._typing_extra' has no attribute 'merge_cls_and_parent_ns'`
-    
-
 卸载：
-
 - `pip uninstall pydantic -y`
-    
-
 安装：
-
 - `pip install pydantic==2.7.4`
-    
 
-## 6. 商业落地实施RAG工程的核心步骤
-
+# 6. 商业落地实施RAG工程的核心步骤
 1. 数据集的准备（语料）
     
     - 文档结构化处理：采用现代的智能文档技术
