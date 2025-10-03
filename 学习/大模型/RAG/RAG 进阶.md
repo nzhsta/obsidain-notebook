@@ -909,6 +909,7 @@ dataset = Dataset.from_dict(data)
 7. 生产环境部署
     - 本地模型部署 vLLM
         
+如果使用 dify 的话，推荐 dify+Ragflow
 
 # 7. 学习打卡
 
