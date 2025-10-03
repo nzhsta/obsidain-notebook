@@ -1,4 +1,5 @@
-
+```table-of-contents
+```
 
 **划重点： RAG 本质上就是重构了一个新的 Prompt！**
 
