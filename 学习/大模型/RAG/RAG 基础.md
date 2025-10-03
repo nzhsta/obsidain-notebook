@@ -261,6 +261,8 @@ def load_knowledge_base(load_path: str, embeddings = None) -> FAISS:
 ```
 
 ### 4.2.3 设置查询问题
+<span style="background:rgba(2, 170, 11, 0.55)">检索时，需要和构建数据库的 embeddingModel 一致</span>
+- ChatOpenAI 方式
 ```python
 # query = "客户经理被投诉了，投诉一次扣多少分"  
 query = "客户经理每年评聘申报时间是怎样的？"  
@@ -304,109 +306,105 @@ if query:
             print(f"文本块页码: {source_page}")
 ```
 
-
-
-
-查询已处理。成本: Tokens Used: 1289  
-  Prompt Tokens: 1240  
-    Prompt Tokens Cached: 0  
-  Completion Tokens: 49  
-    Reasoning Tokens: 0  
-Successful Requests: 1  
-Total Cost (USD): $0.0  
-根据第十一条的规定，客户经理每年评聘的申报时间是每年的1月份。由分行人力资源部和个人业务部在每年的2月份组织统一的资格考试。考试合格者由分行颁发个金客户经理资格证书，其有效期为一年。  
-来源:  
+```outpot
+查询已处理。成本: Tokens Used: 1289
+	Prompt Tokens: 1240
+		Prompt Tokens Cached: 0
+	Completion Tokens: 49
+		Reasoning Tokens: 0
+Successful Requests: 1
+Total Cost (USD): $0.0
+根据第十一条的规定，客户经理每年评聘的申报时间是每年的1月份。由分行人力资源部和个人业务部在每年的2月份组织统一的资格考试。考试合格者由分行颁发个金客户经理资格证书，其有效期为一年。
+来源:
 文本块页码: 1
+```
 
-from langchain_community.llms import Tongyi  
-  
-# 设置查询问题  
-# query = "客户经理被投诉了，投诉一次扣多少分？"  
-query = "客户经理每年评聘申报时间是怎样的？"  
-if query:  
-    # 示例：如何加载已保存的向量数据库  
-    # 注释掉以下代码以避免在当前运行中重复加载  
-    # 创建嵌入模型  
-    embeddings = DashScopeEmbeddings(  
-        model="text-embedding-v2"  
-    )  
-    # 从磁盘加载向量数据库  
-    loaded_knowledgeBase = load_knowledge_base("./vector_db", embeddings)  
-    # 使用加载的知识库进行查询  
-    docs = loaded_knowledgeBase.similarity_search(query)  
-      
-    # 初始化对话大模型  
-    DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY"),  
-    llm = Tongyi(model_name="deepseek-v3", dashscope_api_key=DASHSCOPE_API_KEY)  
-      
-    # 加载问答链  
-    chain = load_qa_chain(llm, chain_type="stuff")  
-  
-    # 准备输入数据  
-    input_data = {"input_documents": docs, "question": query}  
-  
-    # 使用回调函数跟踪API调用成本  
-    with get_openai_callback() as cost:  
-        # 执行问答链  
-        response = chain.invoke(input=input_data)  
-        print(f"查询已处理。成本: {cost}")  
-        print(response["output_text"])  
-        print("来源:")  
-  
-    # 记录唯一的页码  
-    unique_pages = set()  
-  
-    # 显示每个文档块的来源页码  
-    for doc in docs:  
-        text_content = getattr(doc, "page_content", "")  
-        source_page = knowledgeBase.page_info.get(  
-            text_content.strip(), "未知"  
-        )  
-  
-        if source_page not in unique_pages:  
-            unique_pages.add(source_page)  
+- Tongyi 方式
+```python
+from langchain_community.llms import Tongyi
+
+# 设置查询问题
+# query = "客户经理被投诉了，投诉一次扣多少分？"
+query = "客户经理每年评聘申报时间是怎样的？"
+if query:
+    # 示例：如何加载已保存的向量数据库
+    # 注释掉以下代码以避免在当前运行中重复加载
+    # 创建嵌入模型，embeddingModle需要和构建向量数据库时保持一致
+    embeddings = DashScopeEmbeddings(
+        model="text-embedding-v2"
+    )
+    # 从磁盘加载向量数据库
+    loaded_knowledgeBase = load_knowledge_base("./vector_db", embeddings)
+    # 使用加载的知识库进行查询
+    docs = loaded_knowledgeBase.similarity_search(query)
+    
+    # 初始化对话大模型
+    DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY"),
+    llm = Tongyi(model_name="deepseek-v3", dashscope_api_key=DASHSCOPE_API_KEY)
+    
+    # 加载问答链
+    chain = load_qa_chain(llm, chain_type="stuff")
+
+    # 准备输入数据
+    input_data = {"input_documents": docs, "question": query}
+
+    # 使用回调函数跟踪API调用成本
+    with get_openai_callback() as cost:
+        # 执行问答链
+        response = chain.invoke(input=input_data)
+        print(f"查询已处理。成本: {cost}")
+        print(response["output_text"])
+        print("来源:")
+
+    # 记录唯一的页码
+    unique_pages = set()
+
+    # 显示每个文档块的来源页码
+    for doc in docs:
+        text_content = getattr(doc, "page_content", "")
+        source_page = knowledgeBase.page_info.get(
+            text_content.strip(), "未知"
+        )
+
+        if source_page not in unique_pages:
+            unique_pages.add(source_page)
             print(f"文本块页码: {source_page}")
 
-向量数据库已从 ./vector_db 加载。  
-页码信息已加载。  
-查询已处理。成本: Tokens Used: 0  
-	Prompt Tokens: 0  
-		Prompt Tokens Cached: 0  
-	Completion Tokens: 0  
-		Reasoning Tokens: 0  
-Successful Requests: 1  
-Total Cost (USD): $0.0  
-客户经理每年的评聘申报时间是每年一月份。由分行人力资源部、个人业务部每年二月份组织统一的资格考试。考试合格者由分行颁发个金客户经理资格证书，其有效期为一年。  
-来源:  
-文本块页码: 1
+```
 
-**小结：**
+```output
+向量数据库已从 ./vector_db 加载。
+页码信息已加载。
+查询已处理。成本: Tokens Used: 0
+	Prompt Tokens: 0
+		Prompt Tokens Cached: 0
+	Completion Tokens: 0
+		Reasoning Tokens: 0
+Successful Requests: 1
+Total Cost (USD): $0.0
+客户经理每年的评聘申报时间是每年一月份。由分行人力资源部、个人业务部每年二月份组织统一的资格考试。考试合格者由分行颁发个金客户经理资格证书，其有效期为一年。
+来源:
+文本块页码: 1
+```
+
+
+> [!attention] 小结
+> 
 
 **1. PDF文本提取与处理**
-
 - 使用PyPDF2库的PdfReader从PDF文件中提取文本在提取过程中记录每行文本对应的页码，便于后续溯源
-    
 - 使用RecursiveCharacterTextSplitter将长文本分割成小块，便于向量化处理
     
-
 **2. 向量数据库构建**
-
 - 使用OpenAIEmbeddings / DashScopeEmbeddings将文本块转换为向量表示
-    
 - 使用FAISS向量数据库存储文本向量，支持高效的相似度搜索为每个文本块保存对应的页码信息，实现查询结果溯源
-    
 
 **3. 语义搜索与问答链**
-
 - 基于用户查询，使用similarity_search在向量数据库中检索相关文本块
-    
 - 使用文本语言模型和load_qa_chain构建问答链将检索到的文档和用户问题作为输入，生成回答
     
-
 **4. 成本跟踪与结果展示**
-
 - 使用get_openai_callback跟踪API调用成本
-    
 - 展示问答结果和来源页码，方便用户验证信息
     
 
