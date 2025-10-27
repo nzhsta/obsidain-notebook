@@ -110,3 +110,56 @@ LlamaIndex 是一个开源框架，Github 链接：[https://github.com/run-llama
 # ！pip install llama-index
 ```
 
+## 3.1 数据加载（loading）
+### 3.1.1 加载本地数据
+`SimpleDirectoryReader` 是一个简单的本地文件加载器。它会遍历指定目录，并根据文件扩展名自动加载文件（**文本内容**）。
+
+支持的文件类型：
+- `.csv` - comma-separated values
+- `.docx` - Microsoft Word
+- `.epub` - EPUB ebook format
+- `.hwp` - Hangul Word Processor
+- `.ipynb` - Jupyter Notebook
+- `.jpeg`, `.jpg` - JPEG image
+- `.mbox` - MBOX email archive
+- `.md` - Markdown
+- `.mp3`, `.mp4` - audio and video
+- `.pdf` - Portable Document Format
+- `.png` - Portable Network Graphics
+- `.ppt`, `.pptm`, `.pptx` - Microsoft PowerPoint
+
+```python
+import json
+from pydantic.v1 import BaseModel
+
+def show_json(data):
+    """用于展示json数据"""
+    if isinstance(data, str):
+        obj = json.loads(data)
+        print(json.dumps(obj, indent=4, ensure_ascii=False))
+    elif isinstance(data, dict) or isinstance(data, list):
+        print(json.dumps(data, indent=4, ensure_ascii=False))
+    elif issubclass(type(data), BaseModel):
+        print(json.dumps(data.dict(), indent=4, ensure_ascii=False))
+
+def show_list_obj(data):
+    """用于展示一组对象"""
+    if isinstance(data, list):
+        for item in data:
+            show_json(item)
+    else:
+        raise ValueError("Input is not a list")
+```
+
+```python
+from llama_index.core import SimpleDirectoryReader
+
+reader = SimpleDirectoryReader(
+        input_dir="./data", # 目标目录
+        recursive=False, # 是否递归遍历子目录
+        required_exts=[".pdf"] # (可选)只读取指定后缀的文件
+    )
+documents = reader.load_data()
+print(documents[0].text)
+show_json(documents[0].json())
+```
