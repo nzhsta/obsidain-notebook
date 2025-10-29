@@ -226,9 +226,26 @@ for token in model.stream("你是谁"):
 
 **划重点：把Prompt模板看作带有参数的函数**
 
+### 2.2.2 从文件加载 Prompt 模板
+```python
+from langchain.prompts import PromptTemplate
 
-### 2.2.2 结构化输出
-#### 2.2.2.1 直接输出 Pydantic 对象
+template = PromptTemplate.from_file("example_prompt_template.txt")
+print("===Template===")
+print(template)
+print("===Prompt===")
+print(template.format(topic='黑色幽默'))
+```
+
+```output
+===Template===
+input_variables=['topic'] input_types={} partial_variables={} template='举一个关于{topic}的例子'
+===Prompt===
+举一个关于黑色幽默的例子
+```
+
+### 2.2.3 结构化输出
+#### 2.2.3.1 直接输出 Pydantic 对象
 ```python
 from pydantic import BaseModel, Field
 
@@ -268,7 +285,7 @@ structured_llm.invoke(input_prompt)
 Date(year=2023, month=4, day=6, era='AD')
 ```
 
-#### 2.2.2.2 输出指定格式的 JSON
+#### 2.2.3.2 输出指定格式的 JSON
 ```python
 # OpenAI 模型的JSON格式
 json_schema = {
@@ -303,7 +320,7 @@ structured_llm.invoke(input_prompt)
 {'year': 2023, 'month': 4, 'day': 6, 'era': 'AD'}
 ```
 
-#### 2.2.2.3 使用 OutputParser
+#### 2.2.3.3 使用 OutputParser
 [`OutputParser`](https://python.langchain.com/v0.2/docs/concepts/#output-parsers) 可以按指定格式解析模型的输出
 ```python
 from langchain_core.output_parsers import JsonOutputParser
