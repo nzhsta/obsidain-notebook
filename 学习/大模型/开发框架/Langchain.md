@@ -635,12 +635,12 @@ llm = init_chat_model("deepseek-chat", model_provider="deepseek")
 structured_llm = llm.with_structured_output(Semantics)
 
 # LCEL 表达式
-runnable = (
+chain = (
     {"text": RunnablePassthrough()} | prompt | structured_llm
 )
 
 # 直接运行
-ret = runnable.invoke("不超过100元的流量大的套餐有哪些")
+ret = chain.invoke("不超过100元的流量大的套餐有哪些")
 print(
     json.dumps(
         ret.model_dump(),
