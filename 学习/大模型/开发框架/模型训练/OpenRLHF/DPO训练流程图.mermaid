@@ -1,0 +1,58 @@
+graph TB
+    A[开始: train_dpo.py] --> B[1. 解析命令行参数]
+    B --> C[2. 初始化分布式策略<br/>DeepSpeedStrategy]
+    C --> D[3. 加载策略模型<br/>Actor Policy Model]
+    D --> E[4. 加载参考模型<br/>Actor Reference Model 固定]
+    E --> F[5. 加载 Tokenizer]
+    F --> G[6. 加载偏好数据<br/>RewardDataset is_dpo=True]
+    G --> H[7. 创建 DataLoader]
+    H --> I[8. 创建优化器和调度器]
+    I --> J[9. 初始化 DPOTrainer]
+    
+    J --> K{开始训练循环}
+    K --> L[Epoch Loop]
+    L --> M[Batch Loop]
+    
+    M --> N[获取数据<br/>chosen_ids, rejected_ids]
+    
+    N --> O[策略模型前向传播<br/>concatenated_forward model]
+    O --> P[计算 chosen_logps<br/>log P chosen | prompt]
+    P --> Q[计算 rejected_logps<br/>log P rejected | prompt]
+    
+    Q --> R[参考模型前向传播<br/>concatenated_forward ref_model<br/>with torch.no_grad]
+    R --> S[计算 ref_chosen_logps]
+    S --> T[计算 ref_rejected_logps]
+    
+    T --> U[计算 DPO 损失<br/>DPOLoss.compute_loss]
+    
+    U --> V[计算 log 概率比<br/>π_logratios = chosen - rejected<br/>ref_logratios = ref_chosen - ref_rejected]
+    V --> W[计算 logits<br/>β × π_logratios - ref_logratios]
+    W --> X[计算损失<br/>-log sigmoid logits]
+    
+    X --> Y[反向传播<br/>loss.backward]
+    Y --> Z[梯度裁剪]
+    Z --> AA[参数更新<br/>optimizer.step<br/>仅更新策略模型]
+    
+    AA --> AB{检查点保存?}
+    AB -->|是| AC[保存模型]
+    AB -->|否| AD{批次结束?}
+    AC --> AD
+    
+    AD -->|否| M
+    AD -->|是| AE{Epoch 结束?}
+    
+    AE -->|否| L
+    AE -->|是| AF{所有 Epoch 完成?}
+    
+    AF -->|否| L
+    AF -->|是| AG[保存最终模型]
+    AG --> AH[训练完成]
+    
+    style A fill:#e1f5ff
+    style AH fill:#c8e6c9
+    style O fill:#fff9c4
+    style R fill:#ffccbc
+    style U fill:#f8bbd0
+    style V fill:#f8bbd0
+    style W fill:#f8bbd0
+    style X fill:#f8bbd0

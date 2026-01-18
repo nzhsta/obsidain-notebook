@@ -1,0 +1,125 @@
+graph TB
+    subgraph CLI[" 命令行入口 (CLI) "]
+        SFT_CLI[train_sft.py]
+        DPO_CLI[train_dpo.py]
+        PPO_CLI[train_ppo_ray.py]
+        RM_CLI[train_rm.py]
+    end
+    
+    subgraph MODELS[" 模型定义 (Models) "]
+        ACTOR[actor.py<br/>Actor Model]
+        CRITIC[critic.py<br/>Critic Model]
+        REWARD[reward_model.py<br/>Reward Model]
+        LOSS[loss.py<br/>DPOLoss, GPTLMLoss]
+    end
+    
+    subgraph DATASETS[" 数据集 (Datasets) "]
+        SFT_DS[sft_dataset.py<br/>SFTDataset]
+        REWARD_DS[reward_dataset.py<br/>RewardDataset]
+        PROMPT_DS[prompts_dataset.py<br/>PromptDataset]
+        UTILS_DS[utils.py<br/>blending_datasets]
+    end
+    
+    subgraph TRAINERS[" 训练器 (Trainers) "]
+        SFT_TR[sft_trainer.py<br/>SFTTrainer]
+        DPO_TR[dpo_trainer.py<br/>DPOTrainer]
+        PPO_TR[ppo_trainer.py<br/>PPOTrainer]
+        RM_TR[rm_trainer.py<br/>RMTrainer]
+    end
+    
+    subgraph RAY[" Ray 分布式 (Ray) "]
+        LAUNCHER[launcher.py<br/>RayActorGroup]
+        PPO_ACTOR[ppo_actor.py<br/>PolicyModelActor]
+        PPO_CRITIC[ppo_critic.py<br/>CriticModelActor]
+        VLLM[vllm_engine.py<br/>VLLMEngine]
+    end
+    
+    subgraph PPO_UTILS[" PPO 工具 (PPO Utils) "]
+        EXP_MAKER[experience_maker.py<br/>ExperienceMaker]
+        KL_CTRL[kl_controller.py<br/>KLController]
+        REPLAY[replay_buffer.py<br/>ReplayBuffer]
+    end
+    
+    subgraph UTILS[" 工具函数 (Utils) "]
+        STRATEGY[strategy.py<br/>DeepSpeedStrategy]
+        TOKENIZER[utils.py<br/>get_tokenizer]
+        LOGGER[logging_utils.py<br/>WandB, TensorBoard]
+    end
+    
+    %% CLI 调用关系
+    SFT_CLI --> ACTOR
+    SFT_CLI --> SFT_DS
+    SFT_CLI --> SFT_TR
+    SFT_CLI --> STRATEGY
+    SFT_CLI --> TOKENIZER
+    
+    DPO_CLI --> ACTOR
+    DPO_CLI --> REWARD_DS
+    DPO_CLI --> DPO_TR
+    DPO_CLI --> LOSS
+    DPO_CLI --> STRATEGY
+    
+    PPO_CLI --> LAUNCHER
+    PPO_CLI --> VLLM
+    PPO_CLI --> PPO_TR
+    PPO_CLI --> PROMPT_DS
+    
+    RM_CLI --> REWARD
+    RM_CLI --> REWARD_DS
+    RM_CLI --> RM_TR
+    
+    %% Trainer 调用 Model
+    SFT_TR --> ACTOR
+    DPO_TR --> ACTOR
+    DPO_TR --> LOSS
+    PPO_TR --> PPO_ACTOR
+    PPO_TR --> PPO_CRITIC
+    PPO_TR --> EXP_MAKER
+    PPO_TR --> KL_CTRL
+    RM_TR --> REWARD
+    
+    %% Dataset 调用 Utils
+    SFT_DS --> TOKENIZER
+    REWARD_DS --> TOKENIZER
+    PROMPT_DS --> TOKENIZER
+    SFT_DS --> UTILS_DS
+    REWARD_DS --> UTILS_DS
+    PROMPT_DS --> UTILS_DS
+    
+    %% Ray Actor 调用
+    LAUNCHER --> PPO_ACTOR
+    LAUNCHER --> PPO_CRITIC
+    PPO_ACTOR --> ACTOR
+    PPO_CRITIC --> CRITIC
+    PPO_TR --> VLLM
+    
+    %% PPO Utils 调用
+    EXP_MAKER --> PPO_ACTOR
+    EXP_MAKER --> PPO_CRITIC
+    EXP_MAKER --> REWARD
+    EXP_MAKER --> KL_CTRL
+    
+    %% Strategy 被所有 Trainer 使用
+    SFT_TR --> STRATEGY
+    DPO_TR --> STRATEGY
+    PPO_TR --> STRATEGY
+    RM_TR --> STRATEGY
+    
+    %% Logger 被所有 Trainer 使用
+    SFT_TR --> LOGGER
+    DPO_TR --> LOGGER
+    PPO_TR --> LOGGER
+    
+    style SFT_CLI fill:#e1f5ff
+    style DPO_CLI fill:#e1f5ff
+    style PPO_CLI fill:#e1f5ff
+    style RM_CLI fill:#e1f5ff
+    
+    style ACTOR fill:#fff9c4
+    style CRITIC fill:#fff9c4
+    style REWARD fill:#fff9c4
+    
+    style SFT_TR fill:#c8e6c9
+    style DPO_TR fill:#c8e6c9
+    style PPO_TR fill:#c8e6c9
+    style RM_TR fill:#c8e6c9

@@ -1,0 +1,74 @@
+graph TB
+    subgraph SFT[" SFT (监督微调) "]
+        SFT_DATA["数据格式<br/>{question, response}"]
+        SFT_MODEL["模型: 1个<br/>训练模型"]
+        SFT_LOSS["损失函数<br/>交叉熵损失"]
+        SFT_TARGET["目标<br/>模仿人类回答"]
+        SFT_COST["计算成本: 低"]
+        SFT_MEM["显存需求: 低"]
+        SFT_STABLE["稳定性: 高"]
+        SFT_EFFECT["效果: 中"]
+        
+        SFT_DATA --> SFT_MODEL
+        SFT_MODEL --> SFT_LOSS
+        SFT_LOSS --> SFT_TARGET
+    end
+    
+    subgraph DPO[" DPO (直接偏好优化) "]
+        DPO_DATA["数据格式<br/>{prompt, chosen, rejected}"]
+        DPO_MODEL["模型: 2个<br/>策略模型 + 参考模型"]
+        DPO_LOSS["损失函数<br/>DPO 偏好损失"]
+        DPO_TARGET["目标<br/>学习人类偏好"]
+        DPO_COST["计算成本: 中"]
+        DPO_MEM["显存需求: 中"]
+        DPO_STABLE["稳定性: 高"]
+        DPO_EFFECT["效果: 高"]
+        
+        DPO_DATA --> DPO_MODEL
+        DPO_MODEL --> DPO_LOSS
+        DPO_LOSS --> DPO_TARGET
+    end
+    
+    subgraph PPO[" PPO (近端策略优化) "]
+        PPO_DATA["数据格式<br/>{prompt}"]
+        PPO_MODEL["模型: 4个<br/>Actor + Critic<br/>Reward + Reference"]
+        PPO_LOSS["损失函数<br/>PPO Clip 损失"]
+        PPO_TARGET["目标<br/>最大化奖励"]
+        PPO_COST["计算成本: 高"]
+        PPO_MEM["显存需求: 高"]
+        PPO_STABLE["稳定性: 中"]
+        PPO_EFFECT["效果: 最高"]
+        
+        PPO_DATA --> PPO_MODEL
+        PPO_MODEL --> PPO_LOSS
+        PPO_LOSS --> PPO_TARGET
+    end
+    
+    subgraph FLOW[" 完整训练流程 "]
+        STEP1["步骤 1: SFT<br/>基础对话能力<br/>10K-100K 问答对<br/>训练时间: 1-3天"]
+        STEP2A["步骤 2a: 训练 RM<br/>奖励模型训练<br/>50K-200K 偏好对<br/>训练时间: 1-2天"]
+        STEP2B["步骤 2b: 直接 DPO<br/>跳过 RM 训练<br/>50K-200K 偏好对<br/>训练时间: 2-4天"]
+        STEP3["步骤 3: PPO<br/>策略优化<br/>10K-50K 提示词<br/>训练时间: 3-7天"]
+        
+        STEP1 --> STEP2A
+        STEP1 --> STEP2B
+        STEP2A --> STEP3
+    end
+    
+    subgraph COMPARE[" 关键对比 "]
+        C1["数据需求<br/>SFT < PPO < DPO"]
+        C2["模型复杂度<br/>SFT < DPO < PPO"]
+        C3["训练难度<br/>SFT < DPO < PPO"]
+        C4["最终效果<br/>SFT < DPO < PPO"]
+        C5["适用场景<br/>SFT: 基础能力<br/>DPO: 快速对齐<br/>PPO: 极致优化"]
+    end
+    
+    style SFT fill:#e1f5ff
+    style DPO fill:#fff3e0
+    style PPO fill:#f3e5f5
+    style FLOW fill:#c8e6c9
+    style COMPARE fill:#fff9c4
+    
+    style SFT_EFFECT fill:#ffccbc
+    style DPO_EFFECT fill:#fff59d
+    style PPO_EFFECT fill:#a5d6a7

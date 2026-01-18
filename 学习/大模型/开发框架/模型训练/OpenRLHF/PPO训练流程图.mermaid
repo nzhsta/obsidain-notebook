@@ -1,0 +1,83 @@
+graph TB
+    A[开始: train_ppo_ray.py] --> B[1. 初始化 Ray 集群<br/>ray.init]
+    B --> C[2. 创建 vLLM 引擎组<br/>create_vllm_engines]
+    C --> D[3. 创建模型组<br/>RayActorGroup]
+    
+    D --> E1[Actor Model 组<br/>PolicyModelActor]
+    D --> E2[Critic Model 组<br/>CriticModelActor]
+    D --> E3[Reward Model 组<br/>RewardModelActor]
+    D --> E4[Reference Model 组<br/>ReferenceModelActor]
+    
+    E1 --> F
+    E2 --> F
+    E3 --> F
+    E4 --> F[4. 创建 PPOTrainer]
+    
+    F --> G[5. 加载 Prompt 数据集<br/>PromptDataset]
+    G --> H{开始训练循环}
+    
+    H --> I[===== Rollout 阶段 =====]
+    I --> J[加载 Prompt Batch<br/>for prompts in dataloader]
+    J --> K[vLLM 生成回答<br/>batch_vllm_engine_call]
+    K --> L[获得 sequences<br/>prompt + response]
+    
+    L --> M[===== 奖励计算阶段 =====]
+    M --> N1[Reward Model 打分<br/>rewards = rm sequences]
+    M --> N2[Reference Model<br/>ref_log_probs = ref sequences]
+    M --> N3[Actor Model<br/>actor_log_probs = actor sequences]
+    
+    N1 --> O
+    N2 --> O
+    N3 --> O[计算 KL 散度<br/>kl = actor_logps - ref_logps]
+    
+    O --> P[计算总奖励<br/>total_reward = reward - kl_coef × kl]
+    
+    P --> Q[===== 价值估计阶段 =====]
+    Q --> R[Critic 预测价值<br/>values = critic sequences]
+    R --> S[计算 GAE 优势函数<br/>advantages = compute_gae<br/>rewards, values, γ, λ]
+    
+    S --> T[===== 构造 Experience =====]
+    T --> U[Experience = <br/>sequences, log_probs,<br/>values, advantages,<br/>rewards]
+    
+    U --> V[分发 Experience<br/>actor.append experience<br/>critic.append experience]
+    
+    V --> W[===== PPO 更新阶段 =====]
+    W --> X[PPO Epoch Loop<br/>for epoch in range ppo_epochs]
+    
+    X --> Y1[更新 Critic<br/>critic.ppo_train]
+    X --> Y2[更新 Actor<br/>actor.ppo_train]
+    
+    Y1 --> Z1[采样 mini-batch]
+    Z1 --> Z2[计算新价值<br/>new_values = critic sequences]
+    Z2 --> Z3[计算 returns<br/>returns = advantages + old_values]
+    Z3 --> Z4[Critic Loss<br/>0.5 × new_values - returns ²]
+    Z4 --> Z5[反向传播 & 更新]
+    
+    Y2 --> AA1[采样 mini-batch]
+    AA1 --> AA2[计算新 log_probs<br/>new_log_probs = actor sequences]
+    AA2 --> AA3[计算概率比<br/>ratio = exp new_logps - old_logps]
+    AA3 --> AA4[PPO Clip Loss<br/>-min ratio × adv,<br/>clip ratio, 1±ε × adv]
+    AA4 --> AA5[反向传播 & 更新]
+    
+    Z5 --> AB
+    AA5 --> AB{PPO Epoch 结束?}
+    
+    AB -->|否| X
+    AB -->|是| AC[同步权重到 vLLM<br/>broadcast_to_vllm]
+    
+    AC --> AD{训练结束?}
+    AD -->|否| I
+    AD -->|是| AE[保存最终模型]
+    AE --> AF[训练完成]
+    
+    style A fill:#e1f5ff
+    style AF fill:#c8e6c9
+    style I fill:#e3f2fd
+    style M fill:#fff3e0
+    style Q fill:#f3e5f5
+    style W fill:#fce4ec
+    style K fill:#fff9c4
+    style N1 fill:#fff9c4
+    style R fill:#fff9c4
+    style Y1 fill:#ffccbc
+    style Y2 fill:#ffccbc

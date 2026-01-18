@@ -1,0 +1,44 @@
+graph TB
+    A[开始: train_sft.py] --> B[1. 解析命令行参数<br/>ArgumentParser]
+    B --> C[2. 初始化分布式策略<br/>DeepSpeedStrategy]
+    C --> D[3. 加载预训练模型<br/>Actor Model]
+    D --> E[4. 加载 Tokenizer<br/>AutoTokenizer]
+    E --> F[5. 加载训练数据<br/>SFTDataset]
+    F --> G[6. 创建 DataLoader<br/>setup_dataloader]
+    G --> H[7. 创建优化器<br/>AdamW]
+    H --> I[8. 创建调度器<br/>get_scheduler]
+    I --> J[9. 初始化训练器<br/>SFTTrainer]
+    
+    J --> K{开始训练循环}
+    
+    K --> L[Epoch Loop<br/>for epoch in range max_epochs]
+    L --> M[Batch Loop<br/>for batch in dataloader]
+    
+    M --> N[前向传播<br/>model input_ids, labels]
+    N --> O[计算损失<br/>CrossEntropyLoss]
+    O --> P[反向传播<br/>loss.backward]
+    P --> Q[梯度裁剪<br/>clip_grad_norm]
+    Q --> R[参数更新<br/>optimizer.step]
+    R --> S[学习率更新<br/>scheduler.step]
+    
+    S --> T{检查点保存?<br/>step % save_steps == 0}
+    T -->|是| U[保存模型<br/>save_checkpoint]
+    T -->|否| V{批次结束?}
+    U --> V
+    
+    V -->|否| M
+    V -->|是| W{Epoch 结束?}
+    
+    W -->|否| L
+    W -->|是| X{所有 Epoch 完成?}
+    
+    X -->|否| L
+    X -->|是| Y[保存最终模型<br/>save_model]
+    
+    Y --> Z[训练完成]
+    
+    style A fill:#e1f5ff
+    style Z fill:#c8e6c9
+    style N fill:#fff9c4
+    style O fill:#fff9c4
+    style P fill:#fff9c4
