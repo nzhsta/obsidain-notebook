@@ -1,8 +1,8 @@
-# OpenRLHF 项目完全解析（小白友好版）
+# 1 OpenRLHF 项目完全解析（小白友好版）
 
-## 📚 一、项目概述
+## 1.1 📚 一、项目概述
 
-### 1.1 什么是 OpenRLHF？
+### 1.1.1 什么是 OpenRLHF？
 
 OpenRLHF 是一个**人类反馈强化学习**（RLHF）训练框架，用于训练像 ChatGPT 这样的大语言模型。
 
@@ -11,7 +11,7 @@ OpenRLHF 是一个**人类反馈强化学习**（RLHF）训练框架，用于训
 - **SFT（监督微调）**：你给它看很多例子，让它学习模仿
 - **RLHF（强化学习）**：你不断给它反馈（好/不好），让它自己学会什么样的回答更好
 
-### 1.2 核心特点
+### 1.1.2 核心特点
 
 1. **分布式架构**：使用 Ray + vLLM + DeepSpeed，可以在多台机器、多张 GPU 上训练
 2. **高性能**：使用 vLLM 加速文本生成，大幅提升训练速度
@@ -20,9 +20,9 @@ OpenRLHF 是一个**人类反馈强化学习**（RLHF）训练框架，用于训
 
 ---
 
-## 🎯 二、项目入口点详解
+## 1.2 🎯 二、项目入口点详解
 
-### 2.1 主要入口文件
+### 1.2.1 主要入口文件
 
 项目的所有入口点都在 `openrlhf/cli/` 目录下：
 
@@ -38,7 +38,7 @@ openrlhf/cli/
 └── serve_rm.py           # 工具：奖励模型服务
 ```
 
-### 2.2 入口使用方式
+### 1.2.2 入口使用方式
 
 **方式一：直接命令行调用**
 ```bash
@@ -52,9 +52,9 @@ bash examples/scripts/train_sft.sh
 
 ---
 
-## 🔄 三、完整训练流程（三步走）
+## 1.3 🔄 三、完整训练流程（三步走）
 
-### 第一步：监督微调（SFT）
+### 1.3.1 第一步：监督微调（SFT）
 
 **目的：** 让模型学会基本对话能力
 
@@ -109,7 +109,7 @@ deepspeed --module openrlhf.cli.train_sft \
 
 ---
 
-### 第二步：奖励模型训练（RM）
+### 1.3.2 第二步：奖励模型训练（RM）
 
 **目的：** 训练一个能判断回答好坏的模型
 
@@ -141,7 +141,7 @@ deepspeed --module openrlhf.cli.train_rm \
 
 ---
 
-### 第三步：强化学习训练（PPO/REINFORCE++）
+### 1.3.3 第三步：强化学习训练（PPO/REINFORCE++）
 
 **目的：** 通过奖励信号优化模型，让它生成更好的回答
 
@@ -256,9 +256,9 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ---
 
-## 📋 四、关键参数详解
+## 1.4 📋 四、关键参数详解
 
-### 4.1 通用参数
+### 1.4.1 通用参数
 
 | 参数名 | 含义 | 推荐值 | 说明 |
 |--------|------|--------|------|
@@ -269,7 +269,7 @@ python -m openrlhf.cli.train_ppo_ray \
 | `--param_dtype` | 模型精度 | `bf16` | `bf16` 或 `fp16` |
 | `--seed` | 随机种子 | `42` | 保证可复现性 |
 
-### 4.2 SFT 专用参数
+### 1.4.2 SFT 专用参数
 
 | 参数名 | 含义 | 推荐值 | 说明 |
 |--------|------|--------|------|
@@ -292,7 +292,7 @@ python -m openrlhf.cli.train_ppo_ray \
 - 那么梯度累积步数 = 256 / (2 × 8) = 16 步
 - 每 16 步更新一次参数
 
-### 4.3 RM 专用参数
+### 1.4.3 RM 专用参数
 
 | 参数名 | 含义 | 推荐值 |
 |--------|------|--------|
@@ -309,9 +309,9 @@ python -m openrlhf.cli.train_ppo_ray \
 }
 ```
 
-### 4.4 PPO 专用参数（核心）
+### 1.4.4 PPO 专用参数（核心）
 
-#### 资源配置参数
+#### 1.4.4.1 资源配置参数
 
 | 参数名 | 含义 | 说明 |
 |--------|------|------|
@@ -346,7 +346,7 @@ python -m openrlhf.cli.train_ppo_ray \
 --ref_num_gpus_per_node 2        # Ref 用 2 张
 ```
 
-#### 训练控制参数
+#### 1.4.4.2 训练控制参数
 
 | 参数名 | 含义 | 推荐值 | 说明 |
 |--------|------|--------|------|
@@ -368,7 +368,7 @@ python -m openrlhf.cli.train_ppo_ray \
 - `rollout_batch_size=512`，`n_samples_per_prompt=2`
 - 每次生成 \(512 \times 2 = 1024\) 个样本
 
-#### PPO 算法参数（重要！）
+#### 1.4.4.3 PPO 算法参数（重要！）
 
 | 参数名 | 含义 | 推荐值 | 说明 |
 |--------|------|--------|------|
@@ -391,7 +391,7 @@ python -m openrlhf.cli.train_ppo_ray \
 - KL 太小：Actor 学不到新东西
 - 通过 `init_kl_coef` 控制这个平衡
 
-#### 性能优化参数
+#### 1.4.4.4 性能优化参数
 
 | 参数名 | 含义 | 推荐值 |
 |--------|------|--------|
@@ -402,7 +402,7 @@ python -m openrlhf.cli.train_ppo_ray \
 | `--attn_implementation` | 注意力实现 | `flash_attention_2` |
 | `--use_liger_kernel` | Liger 内核 | 可选 |
 
-### 4.5 LoRA 参数（省显存利器）
+### 1.4.5 LoRA 参数（省显存利器）
 
 | 参数名 | 含义 | 推荐值 | 说明 |
 |--------|------|--------|------|
@@ -420,13 +420,13 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ---
 
-## 🚀 五、实战案例（一步步来）
+## 1.5 🚀 五、实战案例（一步步来）
 
-### 案例 1：训练一个 7B 聊天模型（单卡）
+### 1.5.1 案例 1：训练一个 7B 聊天模型（单卡）
 
 **硬件要求：** 1 张 24GB GPU（如 RTX 4090）
 
-#### Step 1：准备数据
+#### 1.5.1.1 Step 1：准备数据
 
 ```python
 # 数据格式示例 (data.jsonl)
@@ -434,7 +434,7 @@ python -m openrlhf.cli.train_ppo_ray \
 {"question": "如何学习Python？", "response": "学习Python可以从基础语法开始..."}
 ```
 
-#### Step 2：SFT 训练
+#### 1.5.1.2 Step 2：SFT 训练
 
 ```bash
 # train_sft_7b.sh
@@ -456,7 +456,7 @@ deepspeed --module openrlhf.cli.train_sft \
    --packing_samples
 ```
 
-#### Step 3：RM 训练（可选）
+#### 1.5.1.3 Step 3：RM 训练（可选）
 
 ```bash
 # 如果有偏好数据
@@ -470,7 +470,7 @@ deepspeed --module openrlhf.cli.train_rm \
    --lora_rank 64
 ```
 
-#### Step 4：PPO 训练（需要更多显存）
+#### 1.5.1.4 Step 4：PPO 训练（需要更多显存）
 
 ```bash
 # 注意：单卡PPO比较困难，建议4卡以上
@@ -490,7 +490,7 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ---
 
-### 案例 2：训练 70B 模型（8 卡）
+### 1.5.2 案例 2：训练 70B 模型（8 卡）
 
 **硬件要求：** 8 张 80GB GPU（如 A100）
 
@@ -530,9 +530,9 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ---
 
-## 🔧 六、常见问题与解决方案
+## 1.6 🔧 六、常见问题与解决方案
 
-### Q1：显存不足怎么办？
+### 1.6.1 Q1：显存不足怎么办？
 
 **方案 1：使用 LoRA**
 ```bash
@@ -566,7 +566,7 @@ python -m openrlhf.cli.train_ppo_ray \
 --adam_offload
 ```
 
-### Q2：训练太慢怎么办？
+### 1.6.2 Q2：训练太慢怎么办？
 
 **方案 1：使用 FlashAttention**
 ```bash
@@ -589,7 +589,7 @@ python -m openrlhf.cli.train_ppo_ray \
 --num_nodes 2
 ```
 
-### Q3：如何监控训练？
+### 1.6.3 Q3：如何监控训练？
 
 **方案 1：使用 WandB**
 ```bash
@@ -602,7 +602,7 @@ python -m openrlhf.cli.train_ppo_ray \
 --use_tensorboard ./logs
 ```
 
-### Q4：训练不稳定怎么办？
+### 1.6.4 Q4：训练不稳定怎么办？
 
 1. **降低学习率**
    ```bash
@@ -626,15 +626,14 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ---
 
-## 📊 七、关键公式解析
+## 1.7 📊 七、关键公式解析
 
-### 7.1 PPO 损失函数
+### 1.7.1 PPO 损失函数
 
 PPO 的目标是最大化：
 
-\[
-L^{CLIP}(\theta) = \mathbb{E}_t[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t)]
-\]
+$L^{CLIP}(\theta) = \mathbb{E}_t[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t)]$
+
 
 **通俗理解：**
 - \(r_t(\theta)\)：新策略和旧策略的概率比
@@ -646,7 +645,7 @@ L^{CLIP}(\theta) = \mathbb{E}_t[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\thet
 - 如果 \(\hat{A}_t < 0\)（坏动作），减少该动作概率
 - 但不要变化太剧烈（通过 clip 限制）
 
-### 7.2 优势函数（GAE）
+### 1.7.2 优势函数（GAE）
 
 \[
 \hat{A}_t = \delta_t + (\gamma\lambda)\delta_{t+1} + \cdots + (\gamma\lambda)^{T-t+1}\delta_{T-1}
@@ -667,7 +666,7 @@ L^{CLIP}(\theta) = \mathbb{E}_t[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\thet
 - 如果实际奖励 > 预期，优势为正
 - 如果实际奖励 < 预期，优势为负
 
-### 7.3 KL 散度惩罚
+### 1.7.3 KL 散度惩罚
 
 总奖励：
 
@@ -689,9 +688,9 @@ total_reward = reward - 0.01 * kl_div  # 减去KL惩罚
 
 ---
 
-## 🎓 八、核心代码走读
+## 1.8 🎓 八、核心代码走读
 
-### 8.1 SFTTrainer 核心逻辑
+### 1.8.1 SFTTrainer 核心逻辑
 
 ```python
 # openrlhf/trainer/sft_trainer.py
@@ -726,7 +725,7 @@ class SFTTrainer:
 - 自动处理梯度累积
 - 支持混合精度训练
 
-### 8.2 PPOTrainer 核心逻辑
+### 1.8.2 PPOTrainer 核心逻辑
 
 ```python
 # openrlhf/trainer/ppo_trainer.py (简化版)
@@ -815,9 +814,9 @@ def compute_gae(self, rewards, values):
 
 ---
 
-## 🌟 九、高级技巧
+## 1.9 🌟 九、高级技巧
 
-### 9.1 多轮对话训练
+### 1.9.1 多轮对话训练
 
 ```bash
 # 使用 multiturn 格式
@@ -838,7 +837,7 @@ def compute_gae(self, rewards, values):
 }
 ```
 
-### 9.2 自定义奖励函数
+### 1.9.2 自定义奖励函数
 
 ```python
 # 创建自定义 Agent
@@ -865,7 +864,7 @@ python -m openrlhf.cli.train_ppo_ray \
    ...
 ```
 
-### 9.3 异步训练（提速）
+### 1.9.3 异步训练（提速）
 
 ```bash
 # 启用异步 RLHF
@@ -879,7 +878,7 @@ python -m openrlhf.cli.train_ppo_ray \
 - 生成和训练并行进行
 - 提升 GPU 利用率
 
-### 9.4 Ring Attention（超长上下文）
+### 1.9.4 Ring Attention（超长上下文）
 
 ```bash
 # 支持更长的序列
@@ -894,9 +893,9 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ---
 
-## 📝 十、总结与最佳实践
+## 1.10 📝 十、总结与最佳实践
 
-### 10.1 训练流程总结
+### 1.10.1 训练流程总结
 
 ```
 1. SFT（监督微调）
@@ -918,7 +917,7 @@ python -m openrlhf.cli.train_ppo_ray \
    时间：3-7 天
 ```
 
-### 10.2 最佳实践
+### 1.10.2 最佳实践
 
 **1. 数据准备**
 - SFT：至少 10K 高质量问答对
@@ -940,7 +939,7 @@ python -m openrlhf.cli.train_ppo_ray \
 - 使用小模型（如 1.5B）快速迭代
 - 记录所有超参数和结果
 
-### 10.3 常用命令速查
+### 1.10.3 常用命令速查
 
 ```bash
 # SFT 训练
@@ -968,27 +967,27 @@ python -m openrlhf.cli.lora_combiner \
 
 ---
 
-## 🔗 十一、参考资源
+## 1.11 🔗 十一、参考资源
 
-### 官方资源
+### 1.11.1 官方资源
 - **GitHub**：https://github.com/OpenRLHF/OpenRLHF
 - **文档**：https://openrlhf.readthedocs.io/
 - **技术报告**：https://www.researchgate.net/publication/393414548
 
-### 学习资料
+### 1.11.2 学习资料
 - **PPO 论文**：[Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 - **DeepSpeed**：https://www.deepspeed.ai/
 - **vLLM**：https://github.com/vllm-project/vllm
 - **Ray**：https://docs.ray.io/
 
-### 数据集推荐
+### 1.11.3 数据集推荐
 - **SFT 数据**：Open-Orca/OpenOrca, databricks/databricks-dolly-15k
 - **RM 数据**：Anthropic/hh-rlhf, OpenAssistant/oasst1
 - **Prompt 数据**：OpenRLHF/prompt-collection-v0.1
 
 ---
 
-## 🎉 结语
+## 1.12 🎉 结语
 
 恭喜你完成了 OpenRLHF 项目的完整学习！现在你应该能够：
 
