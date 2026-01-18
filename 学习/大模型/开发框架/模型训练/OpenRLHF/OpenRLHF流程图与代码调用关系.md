@@ -1,6 +1,6 @@
-# OpenRLHF 流程图与代码调用关系详解
+# 1 OpenRLHF 流程图与代码调用关系详解
 
-## 📊 目录
+## 1.1 📊 目录
 
 1. [SFT（监督微调）流程](#sft-流程)
 2. [DPO（直接偏好优化）流程](#dpo-流程)
@@ -10,9 +10,9 @@
 
 ---
 
-## 1. SFT 流程
+## 1.2 SFT 流程
 
-### 1.1 SFT 训练流程图
+### 1.2.1 SFT 训练流程图
 
 ```mermaid
 graph TD
@@ -47,7 +47,7 @@ graph TD
     X --> Y[训练结束]
 ```
 
-### 1.2 SFT 代码调用关系
+### 1.2.2 SFT 代码调用关系
 
 ```
 train_sft.py (主入口)
@@ -109,7 +109,7 @@ train_sft.py (主入口)
             └─ 与训练循环类似，但不更新参数
 ```
 
-### 1.3 SFT 数据流
+### 1.2.3 SFT 数据流
 
 ```
 原始数据 (JSON/JSONL)
@@ -166,7 +166,7 @@ collate_fn() (批处理)
     # 只计算 labels != -100 的位置
 ```
 
-### 1.4 SFT 关键参数
+### 1.2.4 SFT 关键参数
 
 | 参数 | 作用 | 代码位置 |
 |------|------|----------|
@@ -181,9 +181,9 @@ collate_fn() (批处理)
 
 ---
 
-## 2. DPO 流程
+## 1.3 DPO 流程
 
-### 2.1 DPO 训练流程图
+### 1.3.1 DPO 训练流程图
 
 ```mermaid
 graph TD
@@ -222,7 +222,7 @@ graph TD
     AB --> AC[训练结束]
 ```
 
-### 2.2 DPO 代码调用关系
+### 1.3.2 DPO 代码调用关系
 
 ```
 train_dpo.py (主入口)
@@ -287,9 +287,9 @@ train_dpo.py (主入口)
                 └─ 参考模型参数保持不变
 ```
 
-### 2.3 DPO 核心算法
+### 1.3.3 DPO 核心算法
 
-#### DPO 损失函数
+#### 1.3.3.1 DPO 损失函数
 
 **目标函数：**
 
@@ -336,7 +336,7 @@ class DPOLoss:
         return loss.mean()
 ```
 
-### 2.4 DPO 数据流
+### 1.3.4 DPO 数据流
 
 ```
 偏好数据 (Preference Data)
@@ -397,7 +397,7 @@ concatenated_forward()
     rejected_logps = rejected_logps.sum(-1)  # [batch_size]
 ```
 
-### 2.5 DPO vs SFT 关键区别
+### 1.3.5 DPO vs SFT 关键区别
 
 | 维度 | SFT | DPO |
 |------|-----|-----|
@@ -410,9 +410,9 @@ concatenated_forward()
 
 ---
 
-## 3. PPO 流程
+## 1.4 PPO 流程
 
-### 3.1 PPO 训练流程图
+### 1.4.1 PPO 训练流程图
 
 ```mermaid
 graph TD
@@ -455,7 +455,7 @@ graph TD
     AI --> AJ[训练结束]
 ```
 
-### 3.2 PPO 代码调用关系（详细版）
+### 1.4.2 PPO 代码调用关系（详细版）
 
 ```
 train_ppo_ray.py (主入口)
@@ -636,9 +636,9 @@ train_ppo_ray.py (主入口)
             └─ 下一个 batch
 ```
 
-### 3.3 PPO 核心算法
+### 1.4.3 PPO 核心算法
 
-#### 3.3.1 GAE (Generalized Advantage Estimation)
+#### 1.4.3.1 GAE (Generalized Advantage Estimation)
 
 **优势函数：**
 
@@ -689,7 +689,7 @@ def compute_gae(rewards, values, gamma=0.99, lambd=0.95):
     return advantages
 ```
 
-#### 3.3.2 PPO Clip Loss
+#### 1.4.3.2 PPO Clip Loss
 
 **Actor 损失函数：**
 
@@ -781,7 +781,7 @@ def compute_critic_loss(self, sequences, old_values, advantages):
     return critic_loss
 ```
 
-### 3.4 PPO 数据流
+### 1.4.4 PPO 数据流
 
 ```
 Prompt 数据
@@ -867,9 +867,9 @@ for epoch in range(4):  # 通常 4-8 轮
 
 ---
 
-## 4. SFT vs DPO 对比
+## 1.5 SFT vs DPO 对比
 
-### 4.1 完整对比表
+### 1.5.1 完整对比表
 
 | 维度 | SFT | DPO | PPO |
 |------|-----|-----|-----|
@@ -885,7 +885,7 @@ for epoch in range(4):  # 通常 4-8 轮
 | **效果上限** | 中 | 高 | 最高 |
 | **适用场景** | 基础对话能力 | 偏好对齐 | 复杂任务优化 |
 
-### 4.2 数据需求对比
+### 1.5.2 数据需求对比
 
 ```
 SFT 数据:
@@ -911,7 +911,7 @@ PPO 数据:
 (不需要 response，模型自己生成)
 ```
 
-### 4.3 训练流程对比
+### 1.5.3 训练流程对比
 
 ```
 SFT 流程:
@@ -929,9 +929,9 @@ PPO 流程:
 
 ---
 
-## 5. 完整调用链路
+## 1.6 完整调用链路
 
-### 5.1 模块依赖关系
+### 1.6.1 模块依赖关系
 
 ```
 openrlhf/
@@ -974,7 +974,7 @@ openrlhf/
     └─ utils.py
 ```
 
-### 5.2 关键类的继承关系
+### 1.6.2 关键类的继承关系
 
 ```
 torch.nn.Module
@@ -1007,7 +1007,7 @@ Ray Actor
     └─ ReferenceModelActor
 ```
 
-### 5.3 函数调用层次
+### 1.6.3 函数调用层次
 
 ```
 # SFT 调用栈
@@ -1055,9 +1055,9 @@ main()
 
 ---
 
-## 6. 关键文件速查表
+## 1.7 关键文件速查表
 
-### 6.1 入口文件
+### 1.7.1 入口文件
 
 | 文件 | 作用 | 关键函数 |
 |------|------|----------|
@@ -1066,7 +1066,7 @@ main()
 | `cli/train_ppo_ray.py` | PPO 训练入口 | `train()` |
 | `cli/train_rm.py` | RM 训练入口 | `train()` |
 
-### 6.2 核心模型
+### 1.7.2 核心模型
 
 | 文件 | 作用 | 关键类 |
 |------|------|--------|
@@ -1075,7 +1075,7 @@ main()
 | `models/reward_model.py` | Reward 模型 | `RewardModel` |
 | `models/loss.py` | 损失函数 | `DPOLoss`, `GPTLMLoss` |
 
-### 6.3 训练器
+### 1.7.3 训练器
 
 | 文件 | 作用 | 关键类/函数 |
 |------|------|-------------|
@@ -1085,7 +1085,7 @@ main()
 | `trainer/ray/ppo_actor.py` | PPO Actor | `PolicyModelActor` |
 | `trainer/ray/ppo_critic.py` | PPO Critic | `CriticModelActor` |
 
-### 6.4 数据集
+### 1.7.4 数据集
 
 | 文件 | 作用 | 关键类 |
 |------|------|--------|
@@ -1093,7 +1093,7 @@ main()
 | `datasets/reward_dataset.py` | 偏好数据集 | `RewardDataset` |
 | `datasets/prompts_dataset.py` | Prompt 数据集 | `PromptDataset` |
 
-### 6.5 工具函数
+### 1.7.5 工具函数
 
 | 文件 | 作用 | 关键函数 |
 |------|------|----------|
@@ -1104,9 +1104,9 @@ main()
 
 ---
 
-## 7. 调试技巧
+## 1.8 调试技巧
 
-### 7.1 如何追踪代码执行
+### 1.8.1 如何追踪代码执行
 
 **方法 1：添加打印语句**
 ```python
@@ -1127,7 +1127,7 @@ export NCCL_DEBUG=INFO  # DeepSpeed 日志
 export RAY_LOG_LEVEL=debug  # Ray 日志
 ```
 
-### 7.2 常见调试位置
+### 1.8.2 常见调试位置
 
 ```python
 # SFT 调试点
@@ -1160,9 +1160,9 @@ trainer/ray/ppo_actor.py:ppo_train()  # 检查 loss
 
 ---
 
-## 8. 总结
+## 1.9 总结
 
-### 8.1 选择哪种训练方法？
+### 1.9.1 选择哪种训练方法？
 
 ```
 场景 1: 从零开始训练聊天模型
@@ -1182,7 +1182,7 @@ trainer/ray/ppo_actor.py:ppo_train()  # 检查 loss
 理由: 可以精确控制优化目标
 ```
 
-### 8.2 完整训练流水线
+### 1.9.2 完整训练流水线
 
 ```
 步骤 1: SFT (1-3 天)
@@ -1204,7 +1204,7 @@ OR
 命令: bash train_dpo.sh 或 bash train_ppo.sh
 ```
 
-### 8.3 关键要点
+### 1.9.3 关键要点
 
 ✅ **SFT**：简单直接，适合打基础
 ✅ **DPO**：稳定高效，适合快速迭代
