@@ -1,0 +1,119 @@
+
+- 官方文档地址：[基于人类反馈的强化学习 (RLHF) — OpenRLHF 0.8 文档 - OpenRLHF 框架](https://openrlhf.cn/en/latest/rl.html)
+- 代码仓库：[GitHub - OpenRLHF](https://github.com/OpenRLHF/OpenRLHF/tree/main)
+
+# 1 SFT
+
+
+## 1.1 执行脚本
+deepspeed/launcher/runner.py ——>openrlhf/cli/train_sft.py——>openrlhf/models/actor.py
+### 1.1.1 deepspeed/launcher/runner.py 
+deepspeed/launcher/runner.py是 DeepSpeed 分布式训练的"引擎"，负责在复杂的大规模集群环境中正确、高效地启动和管理训练进程，是 DeepSpeed 支持大规模模型训练的基础设施核心
+- 作用
+	- **分布式训练进程管理**
+		- 在多个节点和 GPU 上启动和管理训练进程
+		- 处理多节点、多 GPU 的通信和协调
+		- 支持各种集群调度器（Slurm、Kubernetes 等）
+	- **环境配置**
+		- 设置分布式训练所需的环境变量
+		- 配置 NCCL、MPI 等通信后端
+		- 设置 CUDA 设备可见性和内存分配
+```python
+deepspeed \
+    --num_nodes=2 \
+    --num_gpus=8 \
+    --master_addr=192.168.1.1 \
+    --master_port=29500 \
+    train_script.py
+```
+
+
+### 1.1.2 openrlhf/cli/train_sft.py
+openrlhf/cli/train_sft.py是 OpenRLHF 框架中用于监督微调（Supervised Fine-Tuning）训练的命令行工具。它是训练 SFT 模型的主要入口点。
+```text
+train()
+|
+├── strategy = get_strategy(args)--DeepspeedStrategy
+├── model = Actor(args.pretrain,  lora_rank=args.lora_rank,  lora_alpha=args.lora_alpha,  target_modules=args.target_modules,  lora_dropout=args.lora_dropout,  ...)
+├── tokenizer = get_tokenizer(args.pretrain, model)
+	├── AutoTokenizer.from_pretrained(pretrain, trust_remote_code=True, use_fast=use_fast)
+	├── gradient_checkpointing
+	├── optim = strategy.create_optimizer(model, lr=args.learning_rate, betas=args.adam_betas, weight_decay=args.l2)
+├── train_data
+	├── blending_datasets
+		├── load_dataset (from datasets import interleave_datasets, load_dataset, load_from_disk)
+		
+		
+	
+
+
+```
+
+- <span style="background:#ff4d4f">作用</span>
+	- **SFT 模型训练**
+		- 基础模型（如 LLaMA、GPT 等）的监督微调
+		- 支持全参数微调和 LoRA 等参数高效微调方法
+		- 多任务学习和指令跟随训练
+	- **数据处理**
+		- 加载和预处理 SFT 数据集
+		- 支持多种数据格式（JSON、Parquet、CSV 等）
+		- 数据打包和批处理
+	- **训练流程管理**
+		- 训练循环控制
+		- 验证和评估
+		- 模型保存和检查点
+
+- <span style="background:#ff4d4f">参数</span>
+	- logging_steps
+	-  **input_key**：JSON dataset key 
+	-  **packing_samples**：🚀packing SFT samples without CrossAttention（打包SFT样本时不使用CrossAttention​）
+		- packing的好处
+			- **减少padding浪费**：传统方法中，短样本需要padding到max_length，造成大量计算浪费
+			- **提高GPU利用率**：将多个短样本打包到一个batch中，充分利用序列长度
+			- **加速训练**：可以提升 2-5倍 的训练吞吐量
+		- without CrossAttention
+				- 防止样本间信息泄露
+				- 梯度来自多个样本的混合信号 → 更新方向可能冲突
+				- 推理时实际情况：模型处理的是独立的输入序列
+		- ❗ 谨慎使用（可能需CrossAttention）
+			- **长文档摘要**：文档被分割成多个块
+			- **书籍续写**：章节间有强连续性
+			- **多模态任务**：文本和图像交错
+	- flash_attention
+	   **FlashAttention**​ 是一种革命性的注意力机制优化技术，专门解决传统注意力机制在大模型训练中的**内存和计算瓶颈**问题。
+	- local_rank for deepspeed
+	   local_rank是 DeepSpeed分布式训练中的一个关键环境变量，用于标识当前进程在单个节点（机器）内的相对位置
+		```python
+			# 分布式训练层级
+			# 假设你有4个节点（机器），每个节点有8个GPU
+			
+			# 全局视角
+			world_size = 32  # 总GPU数 = 4节点 × 8GPU
+			rank = 0-31      # 全局排名，每个GPU的唯一ID
+			
+			# 节点视角
+			node_0: GPU[0,1,2,3,4,5,6,7]  # local_rank = 0-7
+			node_1: GPU[8,9,10,11,12,13,14,15]  # local_rank = 0-7
+			node_2: GPU[16,17,18,19,20,21,22,23]  # local_rank = 0-7
+			node_3: GPU[24,25,26,27,28,29,30,31]  # local_rank = 0-7
+		
+			# 分布式训练的三个rank
+			import os
+			
+			# 2 local_rank: 节点内GPU编号 (0-7)
+			local_rank = int(os.environ["LOCAL_RANK"])  # 0,1,2,...,7
+			
+			# 3 global_rank: 全局GPU编号 (0-31)
+			global_rank = int(os.environ["RANK"])       # 0-31
+			
+			# 4 world_size: 总GPU数量
+			world_size = int(os.environ["WORLD_SIZE"])  # 32
+		```
+	- disable_ds_ckpt
+	  disable_ds_ckpt是 DeepSpeed检查点系统的禁用开关,**关闭DeepSpeed的检查点自动保存功能**，让用户完全手动控制检查点的保存
+	- gradient_checkpointing
+	  在标准的反向传播中，PyTorch/TensorFlow需要存储**前向传播的所有中间激活值**，用于计算梯度。这导致了：
+		- **高内存消耗**：激活值占用了大量GPU显存
+		- **内存是主要瓶颈**：特别是对于大模型
+	  梯度检查点的基本思想：
+		- 不存储所有中间激活值，而是在反向传播时重新计算部分激活值
