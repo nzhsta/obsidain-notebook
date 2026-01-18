@@ -293,18 +293,18 @@ train_dpo.py (主入口)
 
 **目标函数：**
 
-\[
+$$
 \mathcal{L}_{\text{DPO}}(\pi_\theta; \pi_{\text{ref}}) = -\mathbb{E}_{(x,y_w,y_l) \sim \mathcal{D}}\left[\log\sigma\left(\beta\log\frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta\log\frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)}\right)\right]
-\]
+$$
 
 其中：
-- \(x\)：提示词（prompt）
-- \(y_w\)：更好的回答（chosen）
-- \(y_l\)：更差的回答（rejected）
-- \(\pi_\theta\)：策略模型（正在训练）
-- \(\pi_{\text{ref}}\)：参考模型（固定）
-- \(\beta\)：温度参数，控制偏好强度
-- \(\sigma\)：sigmoid 函数
+- $x$：提示词（prompt）
+- $y_w$：更好的回答（chosen）
+- $y_l$：更差的回答（rejected）
+- $\pi_\theta$：策略模型（正在训练）
+- $\pi_{\text{ref}}$：参考模型（固定）
+- $\beta$：温度参数，控制偏好强度
+- $\sigma$：sigmoid 函数
 
 **代码实现：**
 
@@ -642,15 +642,15 @@ train_ppo_ray.py (主入口)
 
 **优势函数：**
 
-\[
+$$
 \hat{A}_t = \sum_{l=0}^{\infty} (\gamma\lambda)^l \delta_{t+l}
-\]
+$$
 
 其中 TD 误差：
 
-\[
+$$
 \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)
-\]
+$$
 
 **代码实现：**
 
@@ -693,15 +693,15 @@ def compute_gae(rewards, values, gamma=0.99, lambd=0.95):
 
 **Actor 损失函数：**
 
-\[
+$$
 L^{CLIP}(\theta) = \mathbb{E}_t\left[\min\left(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right)\right]
-\]
+$$
 
 其中概率比：
 
-\[
+$$
 r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}
-\]
+$$
 
 **代码实现：**
 
@@ -741,15 +741,15 @@ def compute_actor_loss(self, sequences, old_log_probs, advantages):
 
 **Critic 损失函数：**
 
-\[
+$$
 L^{V}(\theta) = \mathbb{E}_t\left[(V_\theta(s_t) - V_t^{target})^2\right]
-\]
+$$
 
 其中目标价值：
 
-\[
+$$
 V_t^{target} = \hat{A}_t + V_{\theta_{old}}(s_t)
-\]
+$$
 
 **代码实现：**
 

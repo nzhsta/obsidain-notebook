@@ -583,19 +583,19 @@ swift sft --config config.yaml
 
 **原理**：
 
-假设原始权重矩阵为 \(W \in \mathbb{R}^{d \times k}\)，LoRA通过两个低秩矩阵来近似更新：
+假设原始权重矩阵为 $W \in \mathbb{R}^{d \times k}$，LoRA通过两个低秩矩阵来近似更新：
 
-\[
+$$
 W' = W + \Delta W = W + BA
-\]
+$$
 
 其中：
-- \(B \in \mathbb{R}^{d \times r}\)
-- \(A \in \mathbb{R}^{r \times k}\)
-- \(r\) 是秩（rank），通常 \(r \ll \min(d, k)\)
+- $B \in \mathbb{R}^{d \times r}$
+- $A \in \mathbb{R}^{r \times k}$
+- $r$ 是秩（rank），通常 $r \ll \min(d, k)$
 
 **优势**：
-- **显存占用低**：只训练 \(BA\) 参数，参数量为 \(r \times (d + k)\)
+- **显存占用低**：只训练 $BA$ 参数，参数量为 $r \times (d + k)$
 - **训练速度快**：参数量减少约 **10000倍**
 - **效果接近全参数**：在多数任务上效果相当
 
@@ -636,14 +636,14 @@ BitsAndBytesConfig(
 
 **原理**：
 
-假设真实批次大小为 \(B_{\text{real}}\)，但显存只能容纳 \(B_{\text{device}}\)：
+假设真实批次大小为 $B_{\text{real}}$，但显存只能容纳 $B_{\text{device}}$：
 
-\[
+$$
 B_{\text{real}} = B_{\text{device}} \times N_{\text{accum}}
-\]
+$$
 
 **训练流程**：
-1. 前向传播 \(N_{\text{accum}}\) 次，累积梯度
+1. 前向传播 $N_{\text{accum}}$ 次，累积梯度
 2. 反向传播一次，更新参数
 3. 清零梯度，重复
 
@@ -660,15 +660,15 @@ B_{\text{real}} = B_{\text{device}} \times N_{\text{accum}}
 
 **Ulysses序列并行**：
 
-假设序列长度为 \(L\)，设备数为 \(N\)：
+假设序列长度为 $L$，设备数为 $N$：
 
-1. 将序列分割：\(L_i = L / N\)
-2. 每个设备处理 \(L_i\) 长度
+1. 将序列分割：$L_i = L / N$
+2. 每个设备处理 $L_i$ 长度
 3. 通过AllGather同步结果
 
 **优势**：
 - 支持 **超长上下文**（32k+）
-- 显存占用降低 \(N\) 倍
+- 显存占用降低 $N$ 倍
 
 **使用示例**：
 ```bash
