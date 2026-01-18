@@ -151,7 +151,7 @@ deepspeed --module openrlhf.cli.train_rm \
 
 ```
 ┌────────────┐
-│  提示词库  │ (Prompt Dataset)
+│  提示词库   │ (Prompt Dataset)
 └─────┬──────┘
       │
       ▼
@@ -370,16 +370,17 @@ $$
 
 #### 1.4.4.3 PPO 算法参数（重要！）
 
-| 参数名 | 含义 | 推荐值 | 说明 |
-|--------|------|--------|------|
-| `--actor_learning_rate` | Actor 学习率 | `5e-7` | 越大学得越快，但可能不稳定 |
-| `--critic_learning_rate` | Critic 学习率 | `9e-6` | 通常比 Actor 大 |
-| `--init_kl_coef` | KL 散度系数 | `0.01-0.05` | 防止模型偏离太远 |
-| `--clip_range_value` | Value 裁剪范围 | `5.0` | PPO 裁剪参数 |
-| `--clip_range_ratio` | Ratio 裁剪范围 | `0.2` | PPO 裁剪参数 |
-| `--gae_lambda` | GAE 参数 | `0.95` | 计算优势函数的参数 |
-| `--normalize_reward` | 标准化奖励 | 开启 | 推荐开启，稳定训练 |
-| `--adam_offload` | Adam 卸载到 CPU | 可选 | 省显存但变慢 |
+| 参数名                      | 含义           | 推荐值         | 说明            |
+| ------------------------ | ------------ | ----------- | ------------- |
+| `--actor_learning_rate`  | Actor 学习率    | `5e-7`      | 越大学得越快，但可能不稳定 |
+| `--critic_learning_rate` | Critic 学习率   | `9e-6`      | 通常比 Actor 大   |
+| `--init_kl_coef`         | KL 散度系数      | `0.01-0.05` | 防止模型偏离太远      |
+| `--clip_range_value`     | Value 裁剪范围   | `5.0`       | PPO 裁剪参数      |
+| `--clip_range_ratio`     | Ratio 裁剪范围   | `0.2`       | PPO 裁剪参数      |
+| `--gae_lambda`           | GAE 参数       | `0.95`      | 计算优势函数的参数     |
+| `--normalize_reward`     | 标准化奖励        | 开启          | 推荐开启，稳定训练     |
+| `--adam_offload`         | Adam 卸载到 CPU | 可选          | 省显存但变慢        |
+
 
 **KL 散度解释：**
 
@@ -632,7 +633,6 @@ python -m openrlhf.cli.train_ppo_ray \
 ### 1.7.1 PPO 损失函数
 
 PPO 的目标是最大化：
-
 $L^{CLIP}(\theta) = \mathbb{E}_t[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t)]$
 
 
