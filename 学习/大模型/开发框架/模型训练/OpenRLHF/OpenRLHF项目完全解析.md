@@ -276,8 +276,8 @@ python -m openrlhf.cli.train_ppo_ray \
 | `--dataset` | 数据集路径 | `Open-Orca/OpenOrca` | HuggingFace 数据集或本地路径 |
 | `--input_key` | 输入字段名 | `"question"` | JSON 数据中的输入字段 |
 | `--output_key` | 输出字段名 | `"response"` | JSON 数据中的输出字段 |
-| `--train_batch_size` | 全局批大小 | `256` | 所有GPU的总批大小 |
-| `--micro_train_batch_size` | 单GPU批大小 | `2` | 每张GPU处理的样本数 |
+| `--train_batch_size` | 全局批大小 | `256` | 所有 GPU 的总批大小 |
+| `--micro_train_batch_size` | 单 GPU 批大小 | `2` | 每张 GPU 处理的样本数 |
 | `--max_epochs` | 训练轮数 | `1-3` | 数据过几遍 |
 | `--learning_rate` | 学习率 | `5e-6` | Adam 优化器学习率 |
 | `--packing_samples` | 打包样本 | 开启 | 提升训练效率，推荐开启 |
@@ -360,13 +360,13 @@ python -m openrlhf.cli.train_ppo_ray \
 
 **关键理解：**
 
-\[
+$$
 \text{总生成样本数} = \text{rollout\_batch\_size} \times \text{n\_samples\_per\_prompt}
-\]
+$$
 
 例如：
 - `rollout_batch_size=512`，`n_samples_per_prompt=2`
-- 每次生成 \(512 \times 2 = 1024\) 个样本
+- 每次生成 $512 \times 2 = 1024$ 个样本
 
 #### 1.4.4.3 PPO 算法参数（重要！）
 
@@ -383,9 +383,9 @@ python -m openrlhf.cli.train_ppo_ray \
 
 **KL 散度解释：**
 
-\[
+$$
 \text{KL}(P_{\text{actor}} \| P_{\text{ref}}) = \text{衡量 Actor 和 Reference 模型的差异}
-\]
+$$
 
 - KL 太大：Actor 偏离太远，可能输出奇怪内容
 - KL 太小：Actor 学不到新东西
@@ -416,15 +416,15 @@ python -m openrlhf.cli.train_ppo_ray \
 
 - 不训练整个模型，只训练小部分参数
 - **显存需求**：全量微调 > LoRA > 推理
-- **7B 模型 LoRA 示例**：只需 1 张 24GB GPU
+- **7 B 模型 LoRA 示例**：只需 1 张 24 GB GPU
 
 ---
 
 ## 1.5 🚀 五、实战案例（一步步来）
 
-### 1.5.1 案例 1：训练一个 7B 聊天模型（单卡）
+### 1.5.1 案例 1：训练一个 7 B 聊天模型（单卡）
 
-**硬件要求：** 1 张 24GB GPU（如 RTX 4090）
+**硬件要求：** 1 张 24 GB GPU（如 RTX 4090）
 
 #### 1.5.1.1 Step 1：准备数据
 
@@ -490,9 +490,9 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ---
 
-### 1.5.2 案例 2：训练 70B 模型（8 卡）
+### 1.5.2 案例 2：训练 70 B 模型（8 卡）
 
-**硬件要求：** 8 张 80GB GPU（如 A100）
+**硬件要求：** 8 张 80 GB GPU（如 A 100）
 
 ```bash
 # SFT 训练 70B
@@ -508,10 +508,11 @@ deepspeed --module openrlhf.cli.train_sft \
    --learning_rate 2e-6 \
    --gradient_checkpointing \
    --packing_samples \
-   --ds_tensor_parallel_size 8       # 张量并行
+   --ds_tensor_parallel_size 8      
 ```
 
 ```bash
+# 张量并行
 # PPO 训练 70B
 python -m openrlhf.cli.train_ppo_ray \
    --actor_num_gpus_per_node 8 \
@@ -532,7 +533,7 @@ python -m openrlhf.cli.train_ppo_ray \
 
 ## 1.6 🔧 六、常见问题与解决方案
 
-### 1.6.1 Q1：显存不足怎么办？
+### 1.6.1 Q 1：显存不足怎么办？
 
 **方案 1：使用 LoRA**
 ```bash
@@ -566,7 +567,7 @@ python -m openrlhf.cli.train_ppo_ray \
 --adam_offload
 ```
 
-### 1.6.2 Q2：训练太慢怎么办？
+### 1.6.2 Q 2：训练太慢怎么办？
 
 **方案 1：使用 FlashAttention**
 ```bash
@@ -589,7 +590,7 @@ python -m openrlhf.cli.train_ppo_ray \
 --num_nodes 2
 ```
 
-### 1.6.3 Q3：如何监控训练？
+### 1.6.3 Q 3：如何监控训练？
 
 **方案 1：使用 WandB**
 ```bash
@@ -602,7 +603,7 @@ python -m openrlhf.cli.train_ppo_ray \
 --use_tensorboard ./logs
 ```
 
-### 1.6.4 Q4：训练不稳定怎么办？
+### 1.6.4 Q 4：训练不稳定怎么办？
 
 1. **降低学习率**
    ```bash
@@ -636,30 +637,30 @@ $L^{CLIP}(\theta) = \mathbb{E}_t[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\the
 
 
 **通俗理解：**
-- \(r_t(\theta)\)：新策略和旧策略的概率比
-- \(\hat{A}_t\)：优势函数（这个动作有多好）
-- \(\epsilon\)：裁剪范围（防止更新太大）
+- $r_t(\theta)$：新策略和旧策略的概率比
+- $\hat{A}_t$：优势函数（这个动作有多好）
+- $\epsilon$：裁剪范围（防止更新太大）
 
 **示例：**
-- 如果 \(\hat{A}_t > 0\)（好动作），增加该动作概率
-- 如果 \(\hat{A}_t < 0\)（坏动作），减少该动作概率
+- 如果 $\hat{A}_t > 0$（好动作），增加该动作概率
+- 如果 $\hat{A}_t < 0$（坏动作），减少该动作概率
 - 但不要变化太剧烈（通过 clip 限制）
 
 ### 1.7.2 优势函数（GAE）
 
-\[
+$$
 \hat{A}_t = \delta_t + (\gamma\lambda)\delta_{t+1} + \cdots + (\gamma\lambda)^{T-t+1}\delta_{T-1}
-\]
+$$
 
 其中：
 
-\[
+$$
 \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)
-\]
+$$
 
 **参数：**
-- \(\gamma\)：折扣因子（未来奖励的权重）
-- \(\lambda\)：GAE 参数（权衡偏差和方差）
+- $\gamma$：折扣因子（未来奖励的权重）
+- $\lambda$：GAE 参数（权衡偏差和方差）
 
 **直观理解：**
 - 计算每一步的"意外收益"
@@ -670,13 +671,13 @@ $L^{CLIP}(\theta) = \mathbb{E}_t[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\the
 
 总奖励：
 
-\[
+$$
 R_{total} = R_{reward} - \beta \cdot KL(P_{\theta} \| P_{\theta_{ref}})
-\]
+$$
 
 **作用：**
 - 防止 Actor 偏离 Reference 太远
-- \(\beta\) 由 `--init_kl_coef` 控制
+- $\beta$ 由 `--init_kl_coef` 控制
 
 **示例：**
 ```python
@@ -920,12 +921,12 @@ python -m openrlhf.cli.train_ppo_ray \
 ### 1.10.2 最佳实践
 
 **1. 数据准备**
-- SFT：至少 10K 高质量问答对
-- RM：至少 50K 偏好对
-- PPO：至少 10K 多样化提示词
+- SFT：至少 10 K 高质量问答对
+- RM：至少 50 K 偏好对
+- PPO：至少 10 K 多样化提示词
 
 **2. 超参数设置**
-- 学习率：从小开始（5e-7），逐步尝试
+- 学习率：从小开始（5 e-7），逐步尝试
 - 批大小：尽量大（受显存限制）
 - KL 系数：0.01-0.05 之间
 
@@ -936,7 +937,7 @@ python -m openrlhf.cli.train_ppo_ray \
 
 **4. 调试技巧**
 - 先在小数据集上验证流程
-- 使用小模型（如 1.5B）快速迭代
+- 使用小模型（如 1.5 B）快速迭代
 - 记录所有超参数和结果
 
 ### 1.10.3 常用命令速查
@@ -981,9 +982,9 @@ python -m openrlhf.cli.lora_combiner \
 - **Ray**：https://docs.ray.io/
 
 ### 1.11.3 数据集推荐
-- **SFT 数据**：Open-Orca/OpenOrca, databricks/databricks-dolly-15k
-- **RM 数据**：Anthropic/hh-rlhf, OpenAssistant/oasst1
-- **Prompt 数据**：OpenRLHF/prompt-collection-v0.1
+- **SFT 数据**：Open-Orca/OpenOrca, databricks/databricks-dolly-15 k
+- **RM 数据**：Anthropic/hh-rlhf, OpenAssistant/oasst 1
+- **Prompt 数据**：OpenRLHF/prompt-collection-v 0.1
 
 ---
 
