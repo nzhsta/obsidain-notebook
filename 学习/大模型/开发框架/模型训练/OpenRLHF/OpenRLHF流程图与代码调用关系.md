@@ -168,16 +168,16 @@ collate_fn() (批处理)
 
 ### 1.2.4 SFT 关键参数
 
-| 参数 | 作用 | 代码位置 |
-|------|------|----------|
-| `--pretrain` | 基座模型路径 | `Actor.__init__()` |
-| `--dataset` | 训练数据路径 | `blending_datasets()` |
-| `--input_key` | 输入字段名 | `SFTDataset.__init__()` |
-| `--output_key` | 输出字段名 | `SFTDataset.__init__()` |
-| `--max_len` | 最大序列长度 | `SFTDataset.__getitem__()` |
-| `--train_batch_size` | 全局批大小 | `fit()` 循环控制 |
-| `--learning_rate` | 学习率 | `create_optimizer()` |
-| `--zero_stage` | DeepSpeed ZeRO 级别 | `get_ds_train_config()` |
+| 参数                   | 作用                | 代码位置                       |
+| -------------------- | ----------------- | -------------------------- |
+| `--pretrain`         | 基座模型路径            | `Actor.__init__()`         |
+| `--dataset`          | 训练数据路径            | `blending_datasets()`      |
+| `--input_key`        | 输入字段名             | `SFTDataset.__init__()`    |
+| `--output_key`       | 输出字段名             | `SFTDataset.__init__()`    |
+| `--max_len`          | 最大序列长度            | `SFTDataset.__getitem__()` |
+| `--train_batch_size` | 全局批大小             | `fit()` 循环控制               |
+| `--learning_rate`    | 学习率               | `create_optimizer()`       |
+| `--zero_stage`       | DeepSpeed ZeRO 级别 | `get_ds_train_config()`    |
 
 ---
 
