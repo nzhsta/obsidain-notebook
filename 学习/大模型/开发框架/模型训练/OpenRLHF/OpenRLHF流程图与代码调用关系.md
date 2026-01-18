@@ -940,29 +940,29 @@ openrlhf/
 │   ├─ train_sft.py        ────┐
 │   ├─ train_dpo.py        ────┤
 │   └─ train_ppo_ray.py    ────┤
-│                               │
+│                              │
 ├─ models/                  # 模型定义
 │   ├─ actor.py            ◄───┤
 │   ├─ critic.py           ◄───┤
 │   ├─ reward_model.py     ◄───┤
 │   └─ loss.py             ◄───┤
-│                               │
+│                              │
 ├─ datasets/                # 数据处理
 │   ├─ sft_dataset.py      ◄───┤
 │   ├─ reward_dataset.py   ◄───┤
 │   └─ prompts_dataset.py  ◄───┤
-│                               │
+│                              │
 ├─ trainer/                 # 训练器
 │   ├─ sft_trainer.py      ◄───┤
 │   ├─ dpo_trainer.py      ◄───┤
 │   ├─ ppo_trainer.py      ◄───┤
-│   │                           │
+│   │                          │
 │   ├─ ray/                # Ray 分布式
 │   │   ├─ launcher.py     ◄───┤
 │   │   ├─ ppo_actor.py    ◄───┤
 │   │   ├─ ppo_critic.py   ◄───┤
 │   │   └─ vllm_engine.py  ◄───┤
-│   │                           │
+│   │                          │
 │   └─ ppo_utils/          # PPO 工具
 │       ├─ experience_maker.py  │
 │       ├─ kl_controller.py     │
