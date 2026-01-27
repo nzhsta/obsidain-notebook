@@ -1,14 +1,14 @@
-# 1 Transformers 项目代码深度解析
+
 
 代码调用树： [[02 Transformers 代码调用树]]
 
-## 1.1 项目概述
+# 1 项目概述
 
 **项目名称**: Hugging Face Transformers  
 **版本**: 5.0.1.dev0  
 **项目描述**: 这是一个提供最先进预训练模型的推理和训练框架，支持文本、计算机视觉、音频、视频和多模态模型。
 
-### 1.1.1 核心价值定位
+## 1.1 核心价值定位
 
 Transformers 作为机器学习生态系统中的**模型定义框架**，是跨框架的枢纽：
 - 与主流训练框架兼容（Axolotl, Unsloth, DeepSpeed, FSDP, PyTorch-Lightning等）
@@ -18,9 +18,9 @@ Transformers 作为机器学习生态系统中的**模型定义框架**，是跨
 
 ---
 
-## 1.2 一、项目架构设计
+# 2 一、项目架构设计
 
-### 1.2.1 整体目录结构
+## 2.1 整体目录结构
 
 ```
 transformers-main/
@@ -38,9 +38,9 @@ transformers-main/
 └── utils/                     # 开发工具脚本
 ```
 
-### 1.2.2 核心设计理念
+## 2.2 核心设计理念
 
-#### 1.2.2.1 设计原则
+### 2.2.1 设计原则
 
 1. **模块化与可扩展性**
    - 每个模型是独立的Python模块
@@ -64,14 +64,14 @@ transformers-main/
 
 ---
 
-## 1.3 二、核心组件深度解析
+# 3 二、核心组件深度解析
 
-### 1.3.1 延迟导入机制
+## 3.1 延迟导入机制
 
-#### 1.3.1.1 代码位置
+### 3.1.1 代码位置
 `src/transformers/__init__.py`
 
-#### 1.3.1.2 设计模式：延迟导入（Lazy Import）
+### 3.1.2 设计模式：延迟导入（Lazy Import）
 
 什么是延迟导入 ：[[9 基础知识#1 延迟导入（Lazy Import）超详细教程]]
 
@@ -105,7 +105,7 @@ else:
     )
 ```
 
-#### 1.3.1.3 设计优势
+### 3.1.3 设计优势
 
 1. **启动性能优化**
    - 初始导入只加载必要的元数据
@@ -121,7 +121,7 @@ else:
    - 静态类型检查器可以正常工作
    - 不影响运行时性能
 
-#### 1.3.1.4 理论基础
+### 3.1.4 理论基础
 
 这种设计模式体现了**关注点分离**（Separation of Concerns）原则：
 - 开发时：完整的类型信息和IDE支持
@@ -129,12 +129,12 @@ else:
 
 ---
 
-### 1.3.2 配置系统（Configuration System）
+## 3.2 配置系统（Configuration System）
 
-#### 1.3.2.1 代码位置
+### 3.2.1 代码位置
 `src/transformers/configuration_utils.py`
 
-#### 1.3.2.2 核心类：PreTrainedConfig
+### 3.2.2 核心类：PreTrainedConfig
 
 **类继承结构**：
 
@@ -144,7 +144,7 @@ PreTrainedConfig
     └─ RotaryEmbeddingConfigMixin (旋转位置编码配置)
 ```
 
-#### 1.3.2.3 核心设计
+### 3.2.3 核心设计
 
 ```python
 class PreTrainedConfig(PushToHubMixin, RotaryEmbeddingConfigMixin):
@@ -173,7 +173,7 @@ class PreTrainedConfig(PushToHubMixin, RotaryEmbeddingConfigMixin):
         # ... 更多属性
 ```
 
-#### 1.3.2.4 配置的生命周期
+### 3.2.4 配置的生命周期
 
 ```
 创建配置 → 修改参数 → 保存到磁盘 → 从磁盘加载 → 初始化模型
@@ -200,7 +200,7 @@ loaded_config = BertConfig.from_pretrained("./my_model")
 model = BertModel(config)
 ```
 
-#### 1.3.2.5 设计优势
+### 3.2.5 设计优势
 
 1. **配置与代码分离**
    - 便于版本控制和复现
@@ -217,7 +217,7 @@ model = BertModel(config)
    - 配置可重用和扩展
    - 模块化设计
 
-#### 1.3.2.6 理论关联
+### 3.2.6 理论关联
 
 这种设计体现了**策略模式**（Strategy Pattern）：
 - 配置对象封装了模型的"策略"（结构参数）
@@ -226,18 +226,18 @@ model = BertModel(config)
 
 ---
 
-### 1.3.3 模型加载系统（Model Loading）
+## 3.3 模型加载系统（Model Loading）
 
-#### 1.3.3.1 代码位置
+### 3.3.1 代码位置
 `src/transformers/modeling_utils.py` (4809行)
 
-#### 1.3.3.2 核心类：PreTrainedModel
+### 3.3.2 核心类：PreTrainedModel
 
 这是所有PyTorch模型的基类，提供了完整的模型生命周期管理。
 
-#### 1.3.3.3 关键功能模块
+### 3.3.3 关键功能模块
 
-##### 1.3.3.3.1 模型初始化
+#### 3.3.3.1 模型初始化
 
 ```python
 class PreTrainedModel(nn.Module, PushToHubMixin, PeftAdapterMixin):
@@ -263,7 +263,7 @@ class PreTrainedModel(nn.Module, PushToHubMixin, PeftAdapterMixin):
         # 模型特定的初始化
 ```
 
-##### 1.3.3.3.2 权重加载机制
+#### 3.3.3.2 权重加载机制
 
 **多格式支持**：
 
@@ -303,7 +303,7 @@ def from_pretrained(cls, pretrained_model_name_or_path, **kwargs):
     return model
 ```
 
-##### 1.3.3.3.3 智能权重加载
+#### 3.3.3.3 智能权重加载
 
 **关键特性**：
 
@@ -337,7 +337,7 @@ def from_pretrained(cls, pretrained_model_name_or_path, **kwargs):
    )
    ```
 
-##### 1.3.3.3.4 高级特性
+#### 3.3.3.4 高级特性
 
 **设备映射（Device Map）**：
 
@@ -374,9 +374,9 @@ model = AutoModel.from_pretrained(
 )
 ```
 
-#### 1.3.3.4 设计模式解析
+### 3.3.4 设计模式解析
 
-##### 1.3.3.4.1 **模板方法模式**（Template Method）
+#### 3.3.4.1 **模板方法模式**（Template Method）
 
 基类定义算法骨架，子类实现具体步骤：
 
@@ -401,7 +401,7 @@ class BertModel(PreTrainedModel):
         self.init_weights()
 ```
 
-##### 1.3.3.4.2 **工厂模式**（Factory Pattern）
+#### 3.3.4.2 **工厂模式**（Factory Pattern）
 
 AutoModel系列提供自动模型创建：
 
@@ -411,7 +411,7 @@ model = AutoModel.from_pretrained("bert-base-uncased")
 # 自动识别为BertModel
 ```
 
-#### 1.3.3.5 理论基础
+### 3.3.5 理论基础
 
 1. **关注点分离**
    - 配置、权重、模型逻辑分离
@@ -427,16 +427,16 @@ model = AutoModel.from_pretrained("bert-base-uncased")
 
 ---
 
-### 1.3.4 Pipeline系统
+## 3.4 Pipeline系统
 
-#### 1.3.4.1 代码位置
+### 3.4.1 代码位置
 `src/transformers/pipelines/base.py` 和 `src/transformers/pipelines/__init__.py`
 
-#### 1.3.4.2 核心设计：Pipeline抽象
+### 3.4.2 核心设计：Pipeline抽象
 
 Pipeline是Transformers最用户友好的API，提供了端到端的推理封装。
 
-#### 1.3.4.3 架构设计
+### 3.4.3 架构设计
 
 ```python
 class Pipeline(ABC):
@@ -476,9 +476,9 @@ class Pipeline(ABC):
         raise NotImplementedError
 ```
 
-#### 1.3.4.4 具体Pipeline实现示例
+### 3.4.4 具体Pipeline实现示例
 
-##### 1.3.4.4.1 文本分类Pipeline
+#### 3.4.4.1 文本分类Pipeline
 
 ```python
 class TextClassificationPipeline(Pipeline):
@@ -532,7 +532,7 @@ class TextClassificationPipeline(Pipeline):
         ]
 ```
 
-##### 1.3.4.4.2 使用示例
+#### 3.4.4.2 使用示例
 
 ```python
 # 简单使用
@@ -552,7 +552,7 @@ for result in classifier(dataset, batch_size=32):
     print(result)
 ```
 
-#### 1.3.4.5 Pipeline工厂函数
+### 3.4.5 Pipeline工厂函数
 
 ```python
 def pipeline(
@@ -595,9 +595,9 @@ def pipeline(
     )
 ```
 
-#### 1.3.4.6 高级特性
+### 3.4.6 高级特性
 
-##### 1.3.4.6.1 批处理支持
+#### 3.4.6.1 批处理支持
 
 ```python
 # 自动批处理
@@ -608,7 +608,7 @@ for output in pipe(KeyDataset(dataset, "text"), batch_size=32):
     print(output)
 ```
 
-##### 1.3.4.6.2 设备管理
+#### 3.4.6.2 设备管理
 
 ```python
 # GPU加速
@@ -621,7 +621,7 @@ pipe = pipeline("text-classification", device=-1)
 pipe = pipeline("text-classification", device="auto")
 ```
 
-##### 1.3.4.6.3 多模态支持
+#### 3.4.6.3 多模态支持
 
 ```python
 # 图像分类
@@ -637,9 +637,9 @@ captioner = pipeline("image-to-text")
 caption = captioner("vacation.jpg")
 ```
 
-#### 1.3.4.7 设计模式解析
+### 3.4.7 设计模式解析
 
-##### 1.3.4.7.1 **模板方法模式**（核心）
+#### 3.4.7.1 **模板方法模式**（核心）
 
 定义算法骨架，让子类实现具体步骤：
 
@@ -653,15 +653,15 @@ Pipeline (抽象类)
     └─ 具体Pipeline实现各自的预处理、推理、后处理逻辑
 ```
 
-##### 1.3.4.7.2 **工厂模式**
+#### 3.4.7.2 **工厂模式**
 
 `pipeline()` 函数根据任务类型创建相应的Pipeline对象。
 
-##### 1.3.4.7.3 **策略模式**
+#### 3.4.7.3 **策略模式**
 
 不同的Pipeline类代表不同的处理策略，可以互换使用。
 
-#### 1.3.4.8 设计优势
+### 3.4.8 设计优势
 
 1. **用户友好**
    - 一行代码完成复杂任务
@@ -685,16 +685,16 @@ Pipeline (抽象类)
 
 ---
 
-### 1.3.5 自动模型选择（AutoModel）
+## 3.5 自动模型选择（AutoModel）
 
-#### 1.3.5.1 代码位置
+### 3.5.1 代码位置
 `src/transformers/models/auto/`
 
-#### 1.3.5.2 设计理念
+### 3.5.2 设计理念
 
 AutoModel系列实现了**工厂模式**，根据配置自动选择正确的模型类。
 
-#### 1.3.5.3 核心实现
+### 3.5.3 核心实现
 
 ```python
 class AutoModel:
@@ -740,7 +740,7 @@ class AutoModel:
         )
 ```
 
-#### 1.3.5.4 Auto*系列类
+### 3.5.4 Auto*系列类
 
 ```python
 # 基础模型
@@ -761,7 +761,7 @@ AutoFeatureExtractor.from_pretrained("model-name")
 AutoProcessor.from_pretrained("model-name")
 ```
 
-#### 1.3.5.5 使用示例
+### 3.5.5 使用示例
 
 ```python
 # 无需知道具体模型类型
@@ -782,7 +782,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 )
 ```
 
-#### 1.3.5.6 设计优势
+### 3.5.6 设计优势
 
 1. **简化用户体验**
    - 不需要记住具体模型类名
@@ -801,11 +801,11 @@ model = AutoModelForSequenceClassification.from_pretrained(
 
 ---
 
-## 1.4 三、优秀设计模式与编码实践
+# 4 三、优秀设计模式与编码实践
 
-### 1.4.1 设计模式应用总结
+## 4.1 设计模式应用总结
 
-#### 1.4.1.1 工厂模式（Factory Pattern）
+### 4.1.1 工厂模式（Factory Pattern）
 
 **应用场景**：
 - `AutoModel` 系列：根据配置自动创建模型
@@ -817,7 +817,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 - 提供统一的创建接口
 - 便于扩展新类型
 
-#### 1.4.1.2 模板方法模式（Template Method）
+### 4.1.2 模板方法模式（Template Method）
 
 **应用场景**：
 - `Pipeline` 类：定义处理流程框架
@@ -829,7 +829,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 - 允许子类定制特定步骤
 - 减少代码重复
 
-#### 1.4.1.3 策略模式（Strategy Pattern）
+### 4.1.3 策略模式（Strategy Pattern）
 
 **应用场景**：
 - 不同的Pipeline实现（分类、生成等）
@@ -841,7 +841,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 - 符合开闭原则
 - 易于测试和维护
 
-#### 1.4.1.4 混入模式（Mixin Pattern）
+### 4.1.4 混入模式（Mixin Pattern）
 
 **应用场景**：
 - `PushToHubMixin`：添加推送到Hub功能
@@ -853,7 +853,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 - 多重继承组合
 - 避免深层继承
 
-#### 1.4.1.5 观察者模式（Observer Pattern）
+### 4.1.5 观察者模式（Observer Pattern）
 
 **应用场景**：
 - `TrainerCallback`：训练过程中的事件回调
@@ -867,9 +867,9 @@ model = AutoModelForSequenceClassification.from_pretrained(
 
 ---
 
-### 1.4.2 编码最佳实践
+## 4.2 编码最佳实践
 
-#### 1.4.2.1 类型提示（Type Hints）
+### 4.2.1 类型提示（Type Hints）
 
 ```python
 from typing import Optional, Union, List, Dict, Any
@@ -892,7 +892,7 @@ def tokenize(
 - 静态类型检查
 - 作为文档
 
-#### 1.4.2.2 文档字符串（Docstrings）
+### 4.2.2 文档字符串（Docstrings）
 
 ```python
 def from_pretrained(
@@ -931,7 +931,7 @@ def from_pretrained(
 - 使用示例
 - 参数说明
 
-#### 1.4.2.3 配置驱动设计
+### 4.2.3 配置驱动设计
 
 ```python
 # 配置文件 config.json
@@ -954,7 +954,7 @@ model = BertModel(config)  # 配置驱动，而非硬编码
 - 可复现性
 - 易于实验
 
-#### 1.4.2.4 错误处理
+### 4.2.4 错误处理
 
 ```python
 def load_model(model_path):
@@ -981,7 +981,7 @@ def load_model(model_path):
 - 帮助用户定位问题
 - 保留原始异常链
 
-#### 1.4.2.5 依赖管理
+### 4.2.5 依赖管理
 
 ```python
 from .utils import is_torch_available, is_tf_available
@@ -1010,7 +1010,7 @@ def train_model():
 - 部分功能可用
 - 清晰的错误提示
 
-#### 1.4.2.6 抽象和接口
+### 4.2.6 抽象和接口
 
 ```python
 class BaseTokenizer(ABC):
@@ -1043,9 +1043,9 @@ class BertTokenizer(BaseTokenizer):
 
 ---
 
-### 1.4.3 代码组织与模块化
+## 4.3 代码组织与模块化
 
-#### 1.4.3.1 单一职责原则
+### 4.3.1 单一职责原则
 
 每个类/函数只做一件事：
 
@@ -1069,7 +1069,7 @@ class BertEverything:
     pass
 ```
 
-#### 1.4.3.2 模块化设计
+### 4.3.2 模块化设计
 
 ```
 transformers/models/bert/
@@ -1085,7 +1085,7 @@ transformers/models/bert/
 - 易于查找和维护
 - 支持独立开发
 
-#### 1.4.3.3 依赖注入
+### 4.3.3 依赖注入
 
 ```python
 class Pipeline:
@@ -1110,9 +1110,9 @@ class Pipeline:
 
 ---
 
-### 1.4.4 性能优化实践
+## 4.4 性能优化实践
 
-#### 1.4.4.1 延迟计算
+### 4.4.1 延迟计算
 
 ```python
 class LazyObject:
@@ -1133,7 +1133,7 @@ large_model = LazyObject(lambda: load_large_model())
 result = large_model.value.predict(x)  # 现在才加载
 ```
 
-#### 1.4.4.2 批处理优化
+### 4.4.2 批处理优化
 
 ```python
 def batch_process(items, batch_size=32):
@@ -1143,7 +1143,7 @@ def batch_process(items, batch_size=32):
         yield process_batch(batch)
 ```
 
-#### 1.4.4.3 内存优化
+### 4.4.3 内存优化
 
 ```python
 @torch.no_grad()  # 推理时不需要梯度
@@ -1155,7 +1155,7 @@ def predict(model, inputs):
 model.gradient_checkpointing_enable()
 ```
 
-#### 1.4.4.4 缓存机制
+### 4.4.4 缓存机制
 
 ```python
 from functools import lru_cache
@@ -1168,11 +1168,11 @@ def load_config(model_name):
 
 ---
 
-## 1.5 四、与理论知识的结合
+# 5 四、与理论知识的结合
 
-### 1.5.1 软件工程原则
+## 5.1 软件工程原则
 
-#### 1.5.1.1 SOLID原则
+### 5.1.1 SOLID原则
 
 1. **单一职责原则（SRP）**
    - 每个类只有一个改变的理由
@@ -1194,7 +1194,7 @@ def load_config(model_name):
    - 依赖抽象而非具体实现
    - 例：Pipeline依赖PreTrainedModel接口
 
-#### 1.5.1.2 DRY原则（Don't Repeat Yourself）
+### 5.1.2 DRY原则（Don't Repeat Yourself）
 
 通过继承和组合避免重复：
 
@@ -1212,9 +1212,9 @@ class BertModel(PreTrainedModel):
 
 ---
 
-### 1.5.2 设计原则实践
+## 5.2 设计原则实践
 
-#### 1.5.2.1 关注点分离
+### 5.2.1 关注点分离
 
 ```
 配置层：定义模型结构
@@ -1223,7 +1223,7 @@ class BertModel(PreTrainedModel):
 工具层：辅助功能（logging, caching）
 ```
 
-#### 1.5.2.2 高内聚、低耦合
+### 5.2.2 高内聚、低耦合
 
 ```python
 # 高内聚：相关功能在一起
@@ -1239,7 +1239,7 @@ class Pipeline:
         self.model = model  # 只依赖接口
 ```
 
-#### 1.5.2.3 可测试性
+### 5.2.3 可测试性
 
 ```python
 # 依赖注入使得测试更容易
@@ -1258,9 +1258,9 @@ def test_pipeline():
 
 ---
 
-### 1.5.3 计算机科学理论
+## 5.3 计算机科学理论
 
-#### 1.5.3.1 时间复杂度优化
+### 5.3.1 时间复杂度优化
 
 ```python
 # 哈希表用于O(1)查找
@@ -1272,7 +1272,7 @@ self.vocab = {token: idx for idx, token in enumerate(tokens)}
 #         return idx
 ```
 
-#### 1.5.3.2 空间复杂度权衡
+### 5.3.2 空间复杂度权衡
 
 ```python
 # 内存映射大文件
@@ -1283,7 +1283,7 @@ with open("large_model.bin", "rb") as f:
     # 不一次性加载整个文件到内存
 ```
 
-#### 1.5.3.3 并发与并行
+### 5.3.3 并发与并行
 
 ```python
 # 多线程数据加载
@@ -1302,11 +1302,11 @@ model = nn.DataParallel(model)  # 多GPU训练
 
 ---
 
-## 1.6 五、学习建议与最佳实践
+# 6 五、学习建议与最佳实践
 
-### 1.6.1 代码阅读建议
+## 6.1 代码阅读建议
 
-#### 1.6.1.1 推荐阅读顺序
+### 6.1.1 推荐阅读顺序
 
 1. **入门级**（1-2周）
    ```
@@ -1333,9 +1333,9 @@ model = nn.DataParallel(model)  # 多GPU训练
    → utils/（开发工具）
    ```
 
-### 1.6.2 编码习惯建议
+## 6.2 编码习惯建议
 
-#### 1.6.2.1 始终使用类型提示
+### 6.2.1 始终使用类型提示
 
 ```python
 def process_data(
@@ -1345,7 +1345,7 @@ def process_data(
     pass
 ```
 
-#### 1.6.2.2 编写文档字符串
+### 6.2.2 编写文档字符串
 
 ```python
 def my_function(param1, param2):
@@ -1365,7 +1365,7 @@ def my_function(param1, param2):
     """
 ```
 
-#### 1.6.2.3 配置优于硬编码
+### 6.2.3 配置优于硬编码
 
 ```python
 # ✅ 好
@@ -1376,7 +1376,7 @@ optimizer = Adam(model.parameters(), lr=config["learning_rate"])
 optimizer = Adam(model.parameters(), lr=0.0001)
 ```
 
-#### 1.6.2.4 使用上下文管理器
+### 6.2.4 使用上下文管理器
 
 ```python
 # 自动资源管理
@@ -1388,7 +1388,7 @@ with model.eval():
     predictions = model(test_data)
 ```
 
-#### 1.6.2.5 异常处理
+### 6.2.5 异常处理
 
 ```python
 try:
@@ -1401,9 +1401,9 @@ except Exception as e:
     raise
 ```
 
-### 1.6.3 项目开发流程建议
+## 6.3 项目开发流程建议
 
-#### 1.6.3.1 开发新功能
+### 6.3.1 开发新功能
 
 ```python
 # 步骤1: 继承基类
@@ -1429,7 +1429,7 @@ def test_my_new_model():
     assert outputs.shape == expected_shape
 ```
 
-#### 1.6.3.2 代码审查检查清单
+### 6.3.2 代码审查检查清单
 
 - [ ] 类型提示完整
 - [ ] 文档字符串清晰
@@ -1439,7 +1439,7 @@ def test_my_new_model():
 - [ ] 性能考虑
 - [ ] 向后兼容
 
-#### 1.6.3.3 性能优化检查
+### 6.3.3 性能优化检查
 
 - [ ] 避免不必要的计算
 - [ ] 使用批处理
@@ -1449,9 +1449,9 @@ def test_my_new_model():
 
 ---
 
-## 1.7 六、核心知识点总结
+# 7 六、核心知识点总结
 
-### 1.7.1 关键设计模式
+## 7.1 关键设计模式
 
 | 设计模式 | 应用场景 | 优势 |
 |---------|---------|------|
@@ -1461,7 +1461,7 @@ def test_my_new_model():
 | 混入模式 | PushToHubMixin等 | 功能模块化 |
 | 观察者模式 | TrainerCallback | 松耦合事件处理 |
 
-### 1.7.2 核心架构组件
+## 7.2 核心架构组件
 
 ```
 transformers/
@@ -1477,14 +1477,14 @@ transformers/
     └── 回调、分布式、混合精度
 ```
 
-### 1.7.3 编码原则
+## 7.3 编码原则
 
 1. **SOLID原则**：单一职责、开闭、里氏替换、接口隔离、依赖倒置
 2. **DRY原则**：避免重复，通过继承和组合复用
 3. **关注点分离**：配置、模型、应用层分离
 4. **高内聚、低耦合**：模块内聚，接口解耦
 
-### 1.7.4 最佳实践
+## 7.4 最佳实践
 
 - ✅ 使用类型提示和文档字符串
 - ✅ 配置驱动开发
@@ -1495,9 +1495,9 @@ transformers/
 
 ---
 
-## 1.8 七、总结与展望
+# 8 七、总结与展望
 
-### 1.8.1 项目亮点
+## 8.1 项目亮点
 
 1. **优秀的架构设计**
    - 清晰的模块划分
@@ -1520,7 +1520,7 @@ transformers/
    - 多设备支持
    - 量化和分布式
 
-### 1.8.2 学习价值
+## 8.2 学习价值
 
 通过学习Transformers项目，你可以掌握：
 
@@ -1543,7 +1543,7 @@ transformers/
    - 性能优化
    - 分布式训练
 
-### 1.8.3 后续深入方向
+## 8.3 后续深入方向
 
 1. **源码贡献**
    - 修复bug
@@ -1562,9 +1562,9 @@ transformers/
 
 ---
 
-## 1.9 附录：常用代码片段
+# 9 附录：常用代码片段
 
-### 1.9.1 A. 基础使用
+## 9.1 A. 基础使用
 
 ```python
 from transformers import AutoModel, AutoTokenizer, pipeline
@@ -1582,7 +1582,7 @@ inputs = tokenizer("Hello world", return_tensors="pt")
 outputs = model(**inputs)
 ```
 
-### 1.9.2 B. 训练模型
+## 9.2 B. 训练模型
 
 ```python
 from transformers import Trainer, TrainingArguments
@@ -1605,7 +1605,7 @@ trainer = Trainer(
 trainer.train()
 ```
 
-### 1.9.3 C. 自定义模型
+## 9.3 C. 自定义模型
 
 ```python
 from transformers import PreTrainedModel, PreTrainedConfig
@@ -1629,7 +1629,7 @@ class MyModel(PreTrainedModel):
         pass
 ```
 
-### 1.9.4 D. 性能优化
+## 9.4 D. 性能优化
 
 ```python
 # 半精度训练
@@ -1652,7 +1652,7 @@ training_args = TrainingArguments(
 
 ---
 
-## 1.10 参考资源
+# 10 参考资源
 
 1. **官方文档**: https://huggingface.co/docs/transformers
 2. **GitHub仓库**: https://github.com/huggingface/transformers
