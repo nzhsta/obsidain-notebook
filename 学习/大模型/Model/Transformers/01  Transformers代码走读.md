@@ -1,5 +1,7 @@
 # 1 Transformers 项目代码深度解析
 
+代码调用树： [[02 Transformers 代码调用树]]
+
 ## 1.1 项目概述
 
 **项目名称**: Hugging Face Transformers  
@@ -70,6 +72,8 @@ transformers-main/
 `src/transformers/__init__.py`
 
 #### 1.3.1.2 设计模式：延迟导入（Lazy Import）
+
+什么是延迟导入 ：[[9 基础知识#1 延迟导入（Lazy Import）超详细教程]]
 
 **核心实现**：
 
@@ -1662,6 +1666,7 @@ training_args = TrainingArguments(
 **创建日期**: 2026-01-27  
 **适用于**: Transformers 5.0.1.dev0
 
----
 
-*本文档旨在帮助开发者深入理解Transformers库的设计和实现，从小白到能够阅读、理解和贡献代码。*
+
+
+
